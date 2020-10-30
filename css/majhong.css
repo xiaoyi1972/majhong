@@ -2,57 +2,46 @@ div{
     user-select: none;
 }
 
+html,body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
 .contain{
-    position: relative;
-    width:360px;
-    margin:0 auto;
+    border:1px solid blue;
+    position: absolute;
+    height:100vh;
+    width:100vw;
+    /*margin:0 auto;*/
 }
 
 .cardArea{
-    position:fixed; 
+    position: absolute;;
+    bottom:400px;
+    left:150px;
+    height:200px;
+    /*border: 1px groove #e5e5e5;
+    box-shadow: inset 0px 0px 2px 0px black;*/
+    border-radius: 2px;
+    z-index:2;
+}
+
+.testPlayer{
+    position: absolute;; 
     bottom:0px;
-    left:80px;
-    height:200px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(0.270vw*20*15);
+    height:120px;
     /*border: 1px groove #e5e5e5;
     box-shadow: inset 0px 0px 2px 0px black;*/
     border-radius: 2px;
     z-index:2;
 }
 
-.testPlayer1{
-    position:fixed; 
-    bottom:0;
-    Margin-bottom:200px;
-    left:80px;
-    height:200px;
-    /*border: 1px groove #e5e5e5;
-    box-shadow: inset 0px 0px 2px 0px black;*/
-    border-radius: 2px;
-    z-index:2;
-    display:inline-block;
-}
 
-.testPlayer2{
-    position:fixed; 
-    bottom:0;
-    Margin-bottom:400px;
-    left:80px;
-    height:200px;
-    /*border: 1px groove #e5e5e5;
-    box-shadow: inset 0px 0px 2px 0px black;*/
-    border-radius: 2px;
-    z-index:2;
-    display:inline-block;
-}
-
-.card{
-    position:absolute;
-    /*bottom:0px;*/
-    transition:left 1s ease-out; /* Safari */
-    width:calc(100px*0.7);
-    height:calc(140px*0.7);
-    background-size: 100%;
-}
 
 @keyframes outDisappear{
     0%{opacity:1;}
@@ -72,38 +61,6 @@ div{
     height:calc(140px*0.4);
     background-size: 100%;
 }
-
-.card:hover{
-    margin-top:-20px
-}
-
-.tong1{background-image:url('../tile/tong/tong_1.svg');}
-.tong2{background-image:url('../tile/tong/tong_2.svg');}
-.tong3{background-image:url('../tile/tong/tong_3.svg');}
-.tong4{background-image:url('../tile/tong/tong_4.svg');}
-.tong5{background-image:url('../tile/tong/tong_5.svg');}
-.tong6{background-image:url('../tile/tong/tong_6.svg');}
-.tong7{background-image:url('../tile/tong/tong_7.svg');}
-.tong8{background-image:url('../tile/tong/tong_8.svg');}
-.tong9{background-image:url('../tile/tong/tong_9.svg');}
-.wan1{background-image:url('../tile/wan/wan_1.svg');}
-.wan2{background-image:url('../tile/wan/wan_2.svg');}
-.wan3{background-image:url('../tile/wan/wan_3.svg');}
-.wan4{background-image:url('../tile/wan/wan_4.svg');}
-.wan5{background-image:url('../tile/wan/wan_5.svg');}
-.wan6{background-image:url('../tile/wan/wan_6.svg');}
-.wan7{background-image:url('../tile/wan/wan_7.svg');}
-.wan8{background-image:url('../tile/wan/wan_8.svg');}
-.wan9{background-image:url('../tile/wan/wan_9.svg');}
-.tiao1{background-image:url('../tile/tiao/tiao_1.svg');}
-.tiao2{background-image:url('../tile/tiao/tiao_2.svg');}
-.tiao3{background-image:url('../tile/tiao/tiao_3.svg');}
-.tiao4{background-image:url('../tile/tiao/tiao_4.svg');}
-.tiao5{background-image:url('../tile/tiao/tiao_5.svg');}
-.tiao6{background-image:url('../tile/tiao/tiao_6.svg');}
-.tiao7{background-image:url('../tile/tiao/tiao_7.svg');}
-.tiao8{background-image:url('../tile/tiao/tiao_8.svg');}
-.tiao9{background-image:url('../tile/tiao/tiao_9.svg');}
 
 .huMsg{
     position:fixed; 
@@ -132,6 +89,27 @@ background:rgba(115,115,115,0.2);
 font-weight:bold;
 }
 
+
+.DqSelect{
+    top:0px;
+    margin-right:30px;
+    width:fit-content;
+    font-weight:normal;
+    font-size:50px;
+    color:rgba(0,0,255);
+    font-family:'宋体';
+    transition:background-color 500ms;
+    transition:font-weight 250ms;
+    display:inline-block;
+}
+
+.DqSelect:hover{
+top:0px;
+width:fit-content;
+background:rgba(115,115,115,0.2);
+font-weight:bold;
+}
+
 .selectOper{
     position: absolute;
     top:-50px;
@@ -142,90 +120,182 @@ font-weight:bold;
 .tip{
     position: absolute;
     width:300px;
-    top:100px;
+    top:98px;
 }
 
-.standCard{
-    position:absolute;
-    width:calc(270px);
-    height:calc(350px + 30px);
-    transform-origin: 0% 0%;
-    transform: scale(0.27,0.27);
-    transition:left 1s ease-out; /* Safari */
-}
-
-.standCard:hover{
-    filter: contrast(200%);
-    margin-top:-20px
-}
 
 .ban{
     filter: grayscale(100%);
 }
 
-.standCard>div{
-    border:solid 1px black;
-    border-radius: 10%;
-    width:calc(270px);
-    height:calc(350px);
-    position: absolute;
-}
-
-.standCard div:first-child{
-    z-index:1;
-    bottom:30px;
-    background:limegreen top no-repeat;
-    background-size:cover;
-}
-
-.standCard div:nth-child(2){
-    z-index:2;
-    bottom:10px;
-    background:white top no-repeat;
-    background-size:cover;
-}
-
-.standCard div:nth-child(3){
+.huSign{
+    border:solid 3px lightcoral;
+    border-radius: 50%;
+    position:absolute;
     z-index:3;
-    bottom:0px;
-    background-color:white;
-    background-size:cover;
+    right:0px;
+    bottom:-45px;
+    color:red;
+    height:90px;
+    width:90px;
+    text-align:center;
+    line-height: 90px; 
+    font-weight:bold;
+    font-size:70px;
+    font-family:'黑体';
 }
 
+
+.result{
+    border:solid 1px lightcoral;
+    background:rgba(115,115,115,0.1);
+    position: absolute;
+    z-index:13;
+    color:black;
+    height:auto;
+    width:auto;
+    margin: 0 auto;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    /*font-weight:bold;*/
+    font-size:25px;
+    font-family:'黑体';
+}
+
+.discardArea{
+    z-index: 6;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    margin:0 auto;
+    top:107px;
+    width:500px;
+    height:auto;
+}
+
+.card{
+    position:absolute;
+    transition:left 1s ease-out; /* Safari */
+    width:calc(270px*0.3);
+    height:calc(400px*0.3);
+}
+
+.card1{
+    width:calc(270px*0.3);
+    height:calc(400px*0.3);
+}
+
+.card:hover{
+    margin-top:-20px
+}
+
+.standCard{
+    width:calc(0.270vw*20);
+    height:calc(0.400vw*20);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left bottom, left top;
+}
 
 .lieCard{
+    width:calc(0.270vw*15);
+    height:calc(0.400vw*15);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left top no-repeat,left top;
+    transition:none;
+}
+
+
+.zc{
     position: absolute;
-    width:calc(270px);
-    height:calc(350px + 30px);
-    transform-origin: 0% 0%;
-    transform: scale(0.17,0.17);
+    width:calc(0.270vh*15);
+    height:calc(0.700vh*15);
+    background:transparent url('../tile/head/左侧.svg') left top no-repeat;
 }
 
-.lieCard>div{
-    border:solid 1px black;
-    border-radius: 10%;
-    width:calc(270px);
-    height:calc(350px);
+
+.zc1{
     position: absolute;
+    width:calc(0.270vh*15);
+    height:calc(0.700vh*15);
+    background:transparent url('../tile/head/左侧.svg') left top no-repeat;
+    transform:rotateY(180deg);
 }
 
-.lieCard div:first-child{
-    z-index:1;
-    bottom:0px;
-    background:limegreen top no-repeat;
-    background-size:cover;
+.pt3{
+    position: absolute;
+    width:calc(0.270vw*13);
+    height:calc(0.400vw*13);
+    background:url('../tile/head/树立背面.svg') left top no-repeat;
 }
 
-.lieCard div:nth-child(2){
+
+.zcpt{
+    position: absolute;
+    width:calc(0.270vh*20);
+    height:calc(0.400vh*20);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left top no-repeat,left top;
+    transform:rotate(-90deg);
+}
+
+.zcpt_r{
+    position: absolute;
+    width:calc(0.270vh*20);
+    height:calc(0.400vh*20);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left top no-repeat,left top;
+    transform:rotate(90deg);
+}
+
+.zcpt_n{
+    position: absolute;
+    width:calc(0.270vw*13);
+    height:calc(0.400vw*13);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left top no-repeat,left top;
+}
+
+.discardCard{
+    width:calc(0.270vw*10);
+    height:calc(0.400vw*10);
+    background-repeat:no-repeat,no-repeat;
+    background-position:left top no-repeat,left top;
+    transition:none;
+}
+
+.showOtherArea_West{
     z-index:2;
-    bottom:20px;
-    background:white top no-repeat;
-    background-size:cover;
+    position: absolute;
+    top:3vw;
+    left:4vw;
+    width:50px;
+    height:auto;
 }
 
-.lieCard div:nth-child(3){
-    z-index:3;
-    bottom:30px;
-    background-color:white;
-    background-size:cover;
+.showOtherArea_North{
+    z-index: 2;
+    position: absolute;
+    top:2vw;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(0.270vw*13*15);
+    height:auto;
+}
+
+.showOtherArea_East{
+    z-index: 2;
+    position: absolute;
+    top:3vw;
+    right:2vw;
+    /*left:747px;*/
+    width:50px;
+    height:auto;
+}
+
+.start{
+    position: absolute;
+    bottom:0px;
+    left:0px
 }

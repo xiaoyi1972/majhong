@@ -1,0 +1,93 @@
+<svg viewBox="0 0 160 570" xmlns="http://www.w3.org/2000/svg">
+ <g>
+ <defs>
+   <filter id="lightMe2">
+    <feColorMatrix in="SourceGraphic"
+      type="matrix"
+      values="0.5 0 0 0 0
+              0 0.5 0 0 0
+              0 0 0.5 0 0
+              0 0 0 1 0" />
+  </filter>
+
+   <filter id="lightMe3">
+    <feColorMatrix in="SourceGraphic"
+      type="matrix"
+      values="0.7 0 0 0 0
+              0 0.7 0 0 0
+              0 0 0.7 0 0
+              0 0 0 1 0" />
+  </filter>
+
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:1" />
+    <stop offset="100%" style="stop-color:rgb(232,232,232);stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:rgb(0,200,0);stop-opacity:1" />
+    <stop offset="100%" style="stop-color:rgb(0,255,0);stop-opacity:1" />
+    </linearGradient>
+    
+</defs>
+  <title>Layer 1</title>
+  <path id="up" d="M0 0 
+  m0 30 
+  a30 30 0 0 1 30 -30 
+  h100 
+  a30 30 0 0 1 30 30 
+  v160 
+  a30 30 0 0 1 -30 30 
+  h-100 
+  a30 30 0 0 1 -30 -30 
+  z" stroke="black" stroke-width="1"  fill="url(#grad1)"/>
+  <path id="down1" d="M0 0 
+  m0 0
+  m160 0
+  m0 30
+  a30 30 0 0 0 -30 -30
+  h-20 
+  v250 
+  h20 
+  a30 30 0 0 1 30 -30
+  z" 
+  stroke="black" stroke-width="1"  fill="url(#grad2)"/>
+  <path id="down" d="M0 0 
+  m0 250 
+  a30 30 0 0 1 30 -30 
+  h100 
+  a30 30 0 0 1 30 30 
+  v290 
+  a30 30 0 0 1 -30 30
+  h-100
+  a30 30 0 0 1 -30 -30 
+  z" stroke="black" stroke-width="1" fill="url(#grad1)" filter="url(#lightMe2)"/>
+  <path id="down2" d="
+  M0 0 
+  m160 0
+  m0 220
+  m0 30
+  a30 30 0 0 0 -30 -30
+  h-20
+  v350 
+  h20 
+  a30 30 0 0 0 30 -30
+  z" stroke="black" stroke-width="1" fill="url(#grad2)" filter="url(#lightMe2)"/>
+   <path id="t1" d="
+   M0 0 
+  m0 190
+  a30 30 0 0 0 30 30
+  a30 30 0 0 0 -30 30
+  v-60
+  z" stroke="black" stroke-width="1" fill="url(#grad1)" filter="url(#lightMe3)"/>
+  <path id="t2" d="
+  M0 0 
+  m30 0
+  m100 0
+  m30 190
+  a30 30 0 0 1 -30 30
+  a30 30 0 0 1 30 30
+  v-60
+  z" stroke="black" stroke-width="1" fill="url(#grad2)" filter="url(#lightMe3)"/>
+ </g>
+</svg>

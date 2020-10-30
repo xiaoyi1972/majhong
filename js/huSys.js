@@ -3,7 +3,7 @@ class HuSys {
         this.cards = _cards;
         this.numArr;
         this.encode();
-        this.msgDiv = this.initMsgDiv();
+        //this.msgDiv = this.initMsgDiv();
     }
 
     reset(_cards) {
@@ -35,44 +35,106 @@ class HuSys {
         for (let i = 0; i < _numArr.length; i++) {
             if (i % 10 == 9) continue;
             _numArr[i]++;
-            if (this.specialCardType(_numArr))
+            if (this.isHu(_numArr))
                 arr.push({ 'type': parseInt(i / 10), 'num': i % 10 + 1 });
             _numArr[i]--;
         }
         return arr;
     }
 
-    specialCardType(_numArr) {
+    isHu(_numArr) {
+        //let str;
         let result = true;
+
         if (this._7Dui(_numArr)) {
-            if (this._7DuiQing(_numArr))
-                this.msgDiv.innerHTML = "胡牌了 是清7对";
+            /*if (this._7DuiQing(_numArr))
+                str = "qing7dui"
             else
-                this.msgDiv.innerHTML = "胡牌了 是7对";
+                str = "qidui"*/
         }
         else if (this.pinghu().result) {
-            if (this.pengpenghu(_numArr)) {
+            /*if (this.pengpenghu(_numArr)) {
                 if (this.qingyise(_numArr))
-                    this.msgDiv.innerHTML = "胡牌了 是清对";
+                    str = "qingdui";
                 else if (this.jiangdui(_numArr))
-                    this.msgDiv.innerHTML = "胡牌了 是将对";
+                    str = "jiangdui"
                 else
-                    this.msgDiv.innerHTML = "胡牌了 是对对胡";
+                    str = "duiduihu"
             }
             else if (this.qingyise(_numArr)) {
-                this.msgDiv.innerHTML = "胡牌了 是清一色";
+                str = "qingyise"
             }
             else if (this.yaojiu(_numArr)) {
-                this.msgDiv.innerHTML = "胡牌了 是幺九平胡";
+                str = "yaojiupinghu"
             }
             else
-                this.msgDiv.innerHTML = "胡牌了 是平胡";
+                str = "pinghu"*/
         }
         else {
-            this.msgDiv.innerHTML = "没胡牌";
+            // str = "meihu"
             result = false;
         }
+        // this.msgDiv.innerHTML = ScoreList[str.toString()].text;
         return result;
+    }
+
+    specialCardType(_numArr) {
+        let str;
+        let result = true;
+
+
+        if (this._7Dui(_numArr)) {
+            if (this._7DuiQing(_numArr))
+                //str = "胡牌了 是清7对";
+                str = "qing7dui"
+            else
+                // str = "胡牌了 是7对";
+                str = "qidui"
+        }
+        else if (this.pinghu().result) {
+            if (this.count(_numArr)) {
+                if (this.pengpenghu(_numArr)) {
+                    if (this.qingyise(_numArr))
+                        // str = "胡牌了 是清对";
+                        str = "qingdui";
+                    else if (this.jiangdui(_numArr))
+                        // str = "胡牌了 是将对";
+                        str = "jiangdui"
+                    else
+                        // str = "胡牌了 是对对胡";
+                        str = "duiduihu"
+                }
+                else if (this.qingyise(_numArr)) {
+                    // str = "胡牌了 是清一色";
+                    str = "qingyise"
+                }
+                else if (this.yaojiu(_numArr)) {
+                    //  str = "胡牌了 是幺九平胡";
+                    str = "yaojiupinghu"
+                }
+            }
+            else
+                //str = "胡牌了 是平胡";
+                str = "pinghu"
+        }
+        else {
+            // str = "没胡牌";
+            str = "meihu"
+            result = false;
+        }
+       // this.msgDiv.innerHTML = ScoreList[str.toString()].text;
+        return str;
+    }
+
+    count(_numArr) {
+        let num = 0;
+        for (let i = 0; i < _numArr.length; i++) {
+            if (i % 10 == 9) continue;
+            else {
+                if (_numArr[i] > 0) num++;
+            }
+        }
+        return num == 14;
     }
 
     _7Dui(_numArr) {
@@ -188,7 +250,7 @@ class HuSys {
         let s = { 'result': false, 'Jiang': null, 'combo': null };
         if (Jiang.length != 0) {
             for (let i = 0; i < Jiang.length; i++) {
-                let _numArr = this.numArr.clone();
+                let _numArr = this.numArr.slice(0);
                 _numArr[Jiang[i]] -= 2;
                 let sr = this.chaiPai(_numArr);
                 //console.log(sr)
@@ -218,7 +280,7 @@ class HuSys {
                         return s
                     else {
                         //console.log('找到的顺牌:' + Shun);
-                        combo.push(Shun.clone())
+                        combo.push(Shun.slice(0))
                         this.spilit(_numArr, Shun, 1)
                     }
                     break;
@@ -227,8 +289,8 @@ class HuSys {
                         return s
                     else {
                         //console.log('找到的对牌:' + duiShun);
-                        combo.push(duiShun.clone())
-                        combo.push(duiShun.clone())
+                        combo.push(duiShun.slice(0))
+                        combo.push(duiShun.slice(0))
                         this.spilit(_numArr, duiShun, 2)
                     }
                     break;
@@ -320,4 +382,15 @@ let pubSub = {
     unSubscribe(key) {
         delete this.subs[key]
     }
+}
+
+let ScoreList = {
+    qing7dui: { score: 1, text: "清7对" },
+    qingdui: { score: 1, text: "清对" },
+    jiangdui: { score: 1, text: "将胡" },
+    duiduihu: { score: 1, text: "对对胡" },
+    qingyise: { score: 1, text: "清一色" },
+    yaojiupinghu: { score: 1, text: "幺九平胡" },
+    pinghu: { score: 1, text: "平胡" },
+    meihu: { score: 0, text: "没胡" },
 }
