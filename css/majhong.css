@@ -1,5 +1,111 @@
+@font-face { font-family: 'oppoSans'; /*字体名称*/ src: url('../font/OPPOSans-R.ttf'); }
+@font-face { font-family: 'simsun'; /*字体名称*/ src: url('../font/STFANGSO.ttf'); }
+@font-face {
+    font-family: 'icomoon';
+    src:  url('font/icomoon.eot?bjhw4b');
+    src:  url('font/icomoon.eot?bjhw4b#iefix') format('embedded-opentype'),
+      url('font/icomoon.ttf?bjhw4b') format('truetype'),
+      url('font/icomoon.woff?bjhw4b') format('woff'),
+      url('font/icomoon.svg?bjhw4b#icomoon') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
+  
+  [class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'icomoon' !important;
+    speak: never;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+  
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .icon-point-up:before {
+    content: "\ea03";
+  }
+  .icon-point-right:before {
+    content: "\ea04";
+  }
+  .icon-point-down:before {
+    content: "\ea05";
+  }
+  .icon-point-left:before {
+    content: "\ea06";
+  }
+
+  
 div{
     user-select: none;
+}
+
+
+.headImage{
+    position: absolute;
+    width:calc(0.270vh*25);
+    height:calc(0.270vh*25);
+    background-repeat:no-repeat;
+    background-position:left top;
+    background-size:100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+@keyframes arrowActive{
+    0%{color:rgba(255,0,255,1);transform:translateY(0);opacity:0;}
+    100%{color:rgba(0,255,0,1);transform:translateY(-15%);opacity:1;}
+}
+
+.headImage>:first-child{
+    display:none;
+    position: absolute;
+    width:auto;
+    height:auto;
+    margin:0 auto;
+    font-size:calc(0.270vh*14);
+    font-family: 'opposans';
+    font-weight: bold;
+    bottom:calc(0.270vh*25);
+    animation:arrowActive 500ms;
+    animation-direction:alternate;
+    animation-iteration-count:infinite;
+    animation-fill-mode:forwards;
+}
+
+.headImage:after{
+    position: absolute;
+    content:"sfqr";
+    font-size:calc(0.270vw*4);
+    font-family: 'opposans';
+    top:calc(0.270vh*25);
+}
+
+.headImage_South{
+    bottom:12%;
+    left:3%;
+}
+
+.headImage_West{
+    top:3vw;
+    left:1vw;
+}
+
+.headImage_North{
+    top:3vw;
+    left:18%;
+}
+
+.headImage_East{
+    top:3vw;
+    right:1vw;
 }
 
 html,body {
@@ -10,7 +116,7 @@ html,body {
 }
 
 .contain{
-    border:1px solid blue;
+   /* border:1px solid blue;*/
     position: absolute;
     height:100vh;
     width:100vw;
@@ -30,17 +136,16 @@ html,body {
 
 .testPlayer{
     position: absolute;; 
-    bottom:0px;
+    bottom:30px;
     left:50%;
     transform:translateX(-50%);
     width:calc(0.270vw*20*15);
-    height:120px;
+    height:calc(0.400vw*20);
     /*border: 1px groove #e5e5e5;
     box-shadow: inset 0px 0px 2px 0px black;*/
     border-radius: 2px;
-    z-index:2;
+    z-index:15;
 }
-
 
 
 @keyframes outDisappear{
@@ -72,11 +177,12 @@ html,body {
 
 .peng{
     top:0px;
+    margin-right:30px;
     width:fit-content;
     font-weight:normal;
-    font-size:50px;
+    font-size:calc(0.270vw*15);
     color:rgba(255,0,0);
-    font-family:'宋体';
+    font-family:'simsun';
     transition:background-color 500ms;
     transition:font-weight 250ms;
     display:inline-block;
@@ -95,9 +201,9 @@ font-weight:bold;
     margin-right:30px;
     width:fit-content;
     font-weight:normal;
-    font-size:50px;
+    font-size:calc(0.270vw*15);
     color:rgba(0,0,255);
-    font-family:'宋体';
+    font-family:'simsun';
     transition:background-color 500ms;
     transition:font-weight 250ms;
     display:inline-block;
@@ -112,15 +218,18 @@ font-weight:bold;
 
 .selectOper{
     position: absolute;
-    top:-50px;
-    width:300px;
+    bottom:calc(0.400vw*20);
+    width:auto;
     visibility: hidden;
 }
 
 .tip{
     position: absolute;
-    width:300px;
-    top:98px;
+    width:auto;
+    height:auto;
+    top:calc(0.400vw*20);
+    font-family: 'opposans';
+    /*bottom:-20px;*/
 }
 
 
@@ -129,26 +238,27 @@ font-weight:bold;
 }
 
 .huSign{
-    border:solid 3px lightcoral;
+    border:solid 1px lightcoral;
     border-radius: 50%;
     position:absolute;
     z-index:3;
     right:0px;
-    bottom:-45px;
+    bottom:0px;
     color:red;
-    height:90px;
-    width:90px;
+    height:2vw;
+    width:2vw;
     text-align:center;
-    line-height: 90px; 
+    line-height: 2vw; 
     font-weight:bold;
-    font-size:70px;
+    font-size:1.7vw;
     font-family:'黑体';
 }
 
 
 .result{
+    display: none;
     border:solid 1px lightcoral;
-    background:rgba(115,115,115,0.1);
+    background:rgba(255,255,255,0.8);
     position: absolute;
     z-index:13;
     color:black;
@@ -160,35 +270,35 @@ font-weight:bold;
     transform:translate(-50%,-50%);
     text-align:center;
     /*font-weight:bold;*/
-    font-size:25px;
+    font-size:calc(0.270vw*10);
     font-family:'黑体';
 }
 
 .discardArea{
     z-index: 6;
-    position: relative;
+    position: absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
     display: flex;
     flex-wrap: wrap;
-    margin:0 auto;
-    top:107px;
-    width:500px;
+    width:50vw;
     height:auto;
 }
 
 .card{
     position:absolute;
-    transition:left 1s ease-out; /* Safari */
-    width:calc(270px*0.3);
-    height:calc(400px*0.3);
-}
-
-.card1{
-    width:calc(270px*0.3);
-    height:calc(400px*0.3);
+    transition:transform 1s ease-out; /* Safari */
 }
 
 .card:hover{
-    margin-top:-20px
+    margin-top:-20px;
+}
+
+@media (hover:none){
+    .card:hover{
+        margin-top:inherit;
+    }
 }
 
 .standCard{
@@ -233,8 +343,8 @@ font-weight:bold;
 
 .zcpt{
     position: absolute;
-    width:calc(0.270vh*20);
-    height:calc(0.400vh*20);
+    width:calc(0.270vh*24);
+    height:calc(0.400vh*24);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transform:rotate(-90deg);
@@ -242,8 +352,8 @@ font-weight:bold;
 
 .zcpt_r{
     position: absolute;
-    width:calc(0.270vh*20);
-    height:calc(0.400vh*20);
+    width:calc(0.270vh*24);
+    height:calc(0.400vh*24);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transform:rotate(90deg);
@@ -258,8 +368,8 @@ font-weight:bold;
 }
 
 .discardCard{
-    width:calc(0.270vw*10);
-    height:calc(0.400vw*10);
+    width:calc(0.270vh*22);
+    height:calc(0.400vh*22);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transition:none;
@@ -269,8 +379,8 @@ font-weight:bold;
     z-index:2;
     position: absolute;
     top:3vw;
-    left:4vw;
-    width:50px;
+    left:5vw;
+    width:calc(0.270vh*15);
     height:auto;
 }
 
@@ -288,9 +398,10 @@ font-weight:bold;
     z-index: 2;
     position: absolute;
     top:3vw;
-    right:2vw;
+    right:5vw;
+    /*margin-right: 20px;*/
     /*left:747px;*/
-    width:50px;
+    width:calc(0.270vh*15);
     height:auto;
 }
 

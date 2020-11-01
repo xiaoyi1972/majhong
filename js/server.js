@@ -1,5 +1,5 @@
 var ws = require('nodejs-websocket');
-var { Game, GameEvent } = require('./tile1.js');
+var { Game, GameEvent } = require('./tile.js');
 
 let users = [];
 let game = new Game(2);

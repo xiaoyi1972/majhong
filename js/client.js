@@ -1,6 +1,7 @@
 // 打开一个 web socket  这里端口号和上面监听的需一致
 let user = { id: 0 };
-let ws = new WebSocket('ws://localhost:3000/');
+//let ws = new WebSocket('ws://localhost:3000/');
+let ws = new WebSocket('ws://192.168.1.3:3000/');
 
 // Web Socket 已连接上，使用 send() 方法发送数据
 ws.onopen = function () {
@@ -17,6 +18,17 @@ ws.onmessage = function (e) {
     }
 }
 
+ws.onerror = function (e) {
+    user.id = 0;
+    game.playersNum = 4;
+    console.log("出错")
+}
+
+ws.onclose = function (e) {
+    user.id = 0;
+    game.playersNum = 4;
+    console.log("关闭")
+}
 window.onunload = () => {
     ws.close()
 }
@@ -49,35 +61,9 @@ let infos = {
     }
 }
 
-function gameToOper(_id, _oper, _args) {
-    let player = game.players[_id];
-    if (_oper == "SelectDaque") {
-        switch (_args) {
-            case 0: player.DqWanClick(); break;
-            case 1: player.DqTiaoClick(); break;
-            case 2: player.DqTongClick(); break;
-        }
-    }
-    else if (_oper == "OutCard") {
-        let card = player.handCards.find(item => {
-            return item.id == _args;
-        });
-        console.log(card)
-        player.click(card);
-    }
-    else if (_oper == "SelectOper") {
-        switch (_args) {
-            case 0: player.huClick(); break;
-            case 1: player.pengClick(); break;
-            case 2: player.gangClick(); break;
-            case 3: player.cancelClick(); break;
-        }
-    }
-}
-
 function sendOper(_eventId, _operName, _argsCovered = null) {
-    console.log(ws.readyState)
-    if (ws.readyState == 0||ws.readyState == 3)
+    //console.log(ws.readyState)
+    if (ws.readyState == 0 || ws.readyState == 3)
         return
     console.log("事件id:" + _eventId)
     if (opers.hasOwnProperty(_operName)) {
@@ -105,5 +91,11 @@ let opers = {
 }
 
 function StartGame() {
-    ws.send(JSON.stringify({ type: "start", content: user.id }));
+    if (ws.readyState == 0 || ws.readyState == 3) {
+        game.restart();
+        start();
+        return;
+    }
+    else
+        ws.send(JSON.stringify({ type: "start", content: user.id }));
 }

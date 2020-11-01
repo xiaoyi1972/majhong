@@ -1,4 +1,4 @@
-Object.prototype.clone = function () {
+/*Object.prototype.clone = function () {
     var root;
     (() => {
         // =============
@@ -72,7 +72,7 @@ Object.prototype.clone = function () {
         }
     })()
     return root
-}
+}*/
 
 class Random {
     constructor(_seed = Math.floor(new Date().getMilliseconds())) {
@@ -132,4 +132,8 @@ class Thread {
         return [foo.toString().match(/^\s*function\s*\(\s*\)\s*\{(([\s\S](?!\}$))*[\s\S])/)[1]];
         //return [foo.toString()];
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { Random };
 }

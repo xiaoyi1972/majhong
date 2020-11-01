@@ -1,0 +1,70 @@
+<svg viewBox="0 0 270 400" xmlns="http://www.w3.org/2000/svg">
+ <g>
+ <defs>
+   <filter id="lightMe2">
+    <feColorMatrix in="SourceGraphic"
+      type="matrix"
+      values="0.5 0 0 0 0
+              0 0.5 0 0 0
+              0 0 0.5 0 0
+              0 0 0 1 0" />
+  </filter>
+
+   <filter id="lightMe3">
+    <feColorMatrix in="SourceGraphic"
+      type="matrix"
+      values="0.7 0 0 0 0
+              0 0.7 0 0 0
+              0 0 0.7 0 0
+              0 0 0 1 0" />
+  </filter>
+
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:1" />
+    <stop offset="100%" style="stop-color:rgb(242,242,242);stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" style="stop-color:rgb(0,200,0);stop-opacity:1" />
+    <stop offset="100%" style="stop-color:rgb(0,255,0);stop-opacity:1" />
+    </linearGradient>
+    
+</defs>
+  <title>Layer 1</title>
+    <path id="up" d="M0 0 
+  m0 30 
+  a30 30 0 0 1 30 -30 
+  h210 
+  a30 30 0 0 1 30 30 
+  v270 
+  a30 30 0 0 1 -30 30 
+  h-210 
+  a30 30 0 0 1 -30 -30 
+  z" stroke="black" stroke-width="1" fill="url(#grad2)"/>
+  
+  <path id="up1" d="M0 0 
+  m0 20
+  m0 30 
+  a30 30 0 0 1 30 -30 
+  h210 
+  a30 30 0 0 1 30 30 
+  v270 
+  a30 30 0 0 1 -30 30 
+  h-210 
+  a30 30 0 0 1 -30 -30 
+  z" stroke="black" stroke-width="1" fill="url(#grad1)" filter="url(#lightMe3)"/>
+
+  <path id="up2" d="M0 0 
+  m0 30
+  m0 50 
+  a30 30 0 0 1 30 -30 
+  h210 
+  a30 30 0 0 1 30 30 
+  v270 
+  a30 30 0 0 1 -30 30 
+  h-210 
+  a30 30 0 0 1 -30 -30 
+  z" stroke="black" stroke-width="1" fill="url(#grad1)"/>
+
+ </g>
+</svg>
