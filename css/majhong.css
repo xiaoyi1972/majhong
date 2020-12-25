@@ -1,50 +1,43 @@
 @font-face { font-family: 'oppoSans'; /*字体名称*/ src: url('../font/OPPOSans-R.ttf'); }
 @font-face { font-family: 'simsun'; /*字体名称*/ src: url('../font/STFANGSO.ttf'); }
-@font-face {
-    font-family: 'icomoon';
-    src:  url('font/icomoon.eot?bjhw4b');
-    src:  url('font/icomoon.eot?bjhw4b#iefix') format('embedded-opentype'),
-      url('font/icomoon.ttf?bjhw4b') format('truetype'),
-      url('font/icomoon.woff?bjhw4b') format('woff'),
-      url('font/icomoon.svg?bjhw4b#icomoon') format('svg');
-    font-weight: normal;
-    font-style: normal;
-    font-display: block;
-  }
-  
-  [class^="icon-"], [class*=" icon-"] {
-    /* use !important to prevent issues with browser extensions that change fonts */
-    font-family: 'icomoon' !important;
-    speak: never;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-  
-    /* Better Font Rendering =========== */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  .icon-point-up:before {
-    content: "\ea03";
-  }
-  .icon-point-right:before {
-    content: "\ea04";
-  }
-  .icon-point-down:before {
-    content: "\ea05";
-  }
-  .icon-point-left:before {
-    content: "\ea06";
-  }
-
   
 div{
     user-select: none;
 }
 
+button {
+    position: relative;
+    background-color: transparent;
+    border: 1px solid #008CBA;
+    color: black;
+    padding: 1px 4px;
+    text-align: center;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+button:after {
+    content: "";
+    background: #008CBA;
+    display: block;
+    position: absolute;
+    padding-top: 300%;
+    padding-left: 350%;
+    margin-left: -20px!important;
+    margin-top: -120%;
+    opacity: 0;
+    transition: all 0.8s
+}
+
+button:active:after {
+    padding: 0;
+    margin: 0;
+    opacity: 1;
+    transition: 0s
+}
 
 .headImage{
     position: absolute;
@@ -80,12 +73,61 @@ div{
     animation-fill-mode:forwards;
 }
 
-.headImage:after{
+.headImage>:nth-child(2){
     position: absolute;
-    content:"sfqr";
     font-size:calc(0.270vw*4);
     font-family: 'opposans';
     top:calc(0.270vh*25);
+}
+
+.headImage>:nth-child(3){
+    position: absolute;
+    font-size:calc(0.270vw*4);
+    font-family: 'opposans';
+    bottom:calc(0.270vh*25);
+}
+
+.headImage>:nth-child(4){
+    position: absolute;
+    top:0;
+    right:0;
+    width: 0;
+    height: 0;
+    color:white;
+    border-top: calc(0.270vh*25*0.6) solid red;
+    border-left: calc(0.270vh*25*0.6) solid transparent;
+    display: none;
+}
+
+.headImage>:nth-child(4)::before{
+    position: absolute;
+    top:calc(-0.270vh*25*0.6);
+    right:0;
+    line-height:  calc(0.270vh*25*0.6);
+    font-size: calc(0.270vh*25*0.6);
+    transform: scale(0.55); 
+    transform-origin: 100% 0%;
+    font-family: 'opposans';
+    content:'胡';
+}
+
+.headImageText>:nth-child(1){
+    /*position: absolute;*/
+    width:fit-content;
+    height: fit-content;
+    border:1px solid red;
+    border-radius: 10%;
+    color:red;
+    font-size:calc(0.270vw*3);
+    font-family: 'opposans';
+    /*bottom:calc(0.270vh*25);*/
+    /*left:-2vh;*/
+}
+
+.southZhuang{
+    position: absolute;
+    top:0;
+    transform:translate(-120%,0%);
 }
 
 .headImage_South{
@@ -95,17 +137,17 @@ div{
 
 .headImage_West{
     top:3vw;
-    left:1vw;
+    left:-4.5vw;
 }
 
 .headImage_North{
-    top:3vw;
-    left:18%;
+    top:1vw;
+    margin-left:-5vw;
 }
 
 .headImage_East{
     top:3vw;
-    right:1vw;
+    right:-4.5vw;
 }
 
 html,body {
@@ -115,13 +157,242 @@ html,body {
     padding: 0;
 }
 
+.xingkong{
+    background-color:black;
+    background-image:
+    radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+    radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+    radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
+    radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+    background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px; 
+    background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+}
+
+@keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
 .contain{
-   /* border:1px solid blue;*/
+    background: linear-gradient(-45deg,rgba(255,255,255,1),rgba(245,245,245,1)
+    ,rgba(255,255,255,1),rgba(240,248,255,1));/* rgba(238,119,82), rgba(231,60,126), rgba(35,166,213), rgba(35,213,171)*/
+    background-size: 400% 400%;
+    animation: Gradient 15s ease infinite;
     position: absolute;
     height:100vh;
     width:100vw;
+    display: none;
     /*margin:0 auto;*/
 }
+
+.roomContain{
+    position: absolute;
+    left:50%;
+    top:50%;
+    width:50vh;
+    height:50vh;
+    transform:translate(-120%,-50%);
+}
+
+.RoomOper{
+    top:50vh;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    /*border:1px solid black;*/
+    left:0px;
+    margin-left: -10px; 
+    margin-right: -10px; 
+}
+
+.RoomOper button{
+ margin:10px;
+ /*width:80px;*/
+}
+
+
+
+.roomList{
+    border:1px solid black;
+    width:50vh;
+    height:50vh;
+    display: flex;
+    position: absolute;
+    left:0px;
+    flex-direction: column;
+    overflow-y:scroll;
+}
+
+.roomList::-webkit-scrollbar {
+    width: 3px;/*滚动条整体样式*/  
+    height: 1px;/*高宽分别对应横竖滚动条的尺寸*/
+}
+
+.roomList::-webkit-scrollbar-thumb {
+    border-radius: 10px;/*滚动条里面小方块*/
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: #535353;
+
+}
+
+.roomList::-webkit-scrollbar-track {
+box-shadow: inset 0 0 5px rgba(0,0,0,0.2);/*滚动条里面轨道*/
+border-radius: 10px;
+background: #EDEDED;
+}
+
+.roomSelect{
+    font-size:calc(0.270vw*7);
+    font-family: 'opposans';
+    margin:0.5vh;
+}
+
+.roomSelect:nth-child(odd)
+{
+    background:#f5f3f3;
+}
+.roomSelect:nth-child(even)
+{
+    background:white;
+}
+
+.roomSelect.Selected{
+    outline:red double 0.4vh;
+    /*outline-offset:-1px;*/
+    /*background: #ff00009a;
+    color:white;*/
+}
+
+.table{
+    z-index: 6;
+    position: absolute;
+    border:1px solid black;
+    font-size:calc(0.270vw*25);
+    width:40vh;
+    height:40vh;
+    left:50%;
+    top:50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform:translate(50%,-50%);
+   /* clip-path: polygon(0 20%, 
+    20% 0, 
+    80% 0,
+    100% 20%,
+    100% 80%,
+    80% 100%,
+    20% 100%,
+    0 80%);
+    background-color: green;*/
+    /*background: 
+    linear-gradient(-45deg, transparent 52px, green 0) bottom right,
+    linear-gradient(-135deg, transparent 52px, #ffffff 0) top right;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;*/
+
+}
+
+.table>div{
+    /*font-size:calc(0.270vw*4);*/
+    width:calc(0.270vh*35);
+    height:calc(0.270vh*35);
+}
+
+.table>:nth-child(3){
+    position:absolute;
+    border:1px solid blue;
+    margin-bottom:50vh;
+    transform:translate(0%,-50%);
+}
+
+.table>:nth-child(4){
+    position:absolute;
+    border:1px solid blue;
+    margin-right:50vh;
+    transform:translate(-50%,0%);
+}
+
+.table>:nth-child(2){
+    position:absolute;
+    border:1px solid blue;
+    margin-left:50vh;
+    transform:translate(50%,0%);
+}
+
+.table>:nth-child(1){
+    position:absolute;
+    border:1px solid blue;
+    margin-top:50vh;
+    transform:translate(0%,50%);
+}
+
+.info{
+position: absolute;
+right:0;
+top:0;
+display: flex;
+align-self: start;
+flex-direction: row;
+}
+
+.info>div{
+    font-size:calc(0.270vw*7);
+    font-family: 'opposans';
+    margin:10px;
+}
+
+.selfInfo{
+    display: flex;
+    flex-direction: row;
+}
+
+.selfInfo>:nth-child(1){
+    background-repeat:no-repeat;
+    background-position:left top;
+    background-size:100%;
+    border:1px solid blue;
+    width:calc(0.270vh*35);
+    height:calc(0.270vh*35);
+
+}
+
+.selfInfo>:nth-child(2){
+    font-size:calc(0.270vw*7);
+    font-family: 'opposans';
+}
+
+
+.waitHead{
+    background-repeat:no-repeat;
+    background-position:left top;
+    background-size:100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.waitHead>:nth-child(1){
+    position: absolute;
+    font-size:calc(0.270vw*5);
+    font-family: 'opposans';
+    top:calc(0.270vh*35);
+}
+
+.readyRoom{
+    /* border:1px solid blue;*/
+     position: absolute;
+     height:100vh;
+     width:100vw;
+     /*margin:0 auto;*/
+ }
 
 .cardArea{
     position: absolute;;
@@ -185,7 +456,7 @@ html,body {
     font-family:'simsun';
     transition:background-color 500ms;
     transition:font-weight 250ms;
-    display:inline-block;
+    display:none;
 }
 
 .peng:hover{
@@ -282,13 +553,13 @@ font-weight:bold;
     transform:translate(-50%,-50%);
     display: flex;
     flex-wrap: wrap;
-    width:50vw;
+    width:56vw;
     height:auto;
 }
 
 .card{
     position:absolute;
-    transition:transform 1s ease-out; /* Safari */
+    transition:transform 1s linear; /* Safari */
 }
 
 .card:hover{
@@ -302,8 +573,8 @@ font-weight:bold;
 }
 
 .standCard{
-    width:calc(0.270vw*20);
-    height:calc(0.400vw*20);
+    width:calc(0.270vw*20.1);
+    height:calc(0.400vw*20.1);
     background-repeat:no-repeat,no-repeat;
     background-position:left bottom, left top;
 }
@@ -314,6 +585,7 @@ font-weight:bold;
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transition:none;
+    bottom:0;
 }
 
 
@@ -343,17 +615,18 @@ font-weight:bold;
 
 .zcpt{
     position: absolute;
-    width:calc(0.270vh*24);
-    height:calc(0.400vh*24);
+    width:calc(0.270vh*22);
+    height:calc(0.400vh*22);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transform:rotate(-90deg);
+    right:0;
 }
 
 .zcpt_r{
     position: absolute;
-    width:calc(0.270vh*24);
-    height:calc(0.400vh*24);
+    width:calc(0.270vh*22);
+    height:calc(0.400vh*22);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
     transform:rotate(90deg);
@@ -368,10 +641,11 @@ font-weight:bold;
 }
 
 .discardCard{
-    width:calc(0.270vh*22);
-    height:calc(0.400vh*22);
+    width:calc(0.270vh*23);
+    height:calc(0.400vh*23);
     background-repeat:no-repeat,no-repeat;
     background-position:left top no-repeat,left top;
+    margin-bottom: calc(-0.400vh*1);
     transition:none;
 }
 
@@ -399,14 +673,26 @@ font-weight:bold;
     position: absolute;
     top:3vw;
     right:5vw;
-    /*margin-right: 20px;*/
-    /*left:747px;*/
     width:calc(0.270vh*15);
     height:auto;
 }
 
 .start{
+    position: fixed;
+    bottom:0px;
+    left:0px;
+}
+
+
+.GameOper{
     position: absolute;
     bottom:0px;
-    left:0px
+    right:0px;
+    display: flex;
+    flex-direction: row;
+}
+
+
+.GameOper button{
+    margin-left:10px;
 }

@@ -5,20 +5,44 @@
 
 <head>
     <link rel="stylesheet" type="text/css" href="css/majhong.css" />
+    <link rel="stylesheet" type="text/css" href="css/rain.css">
 </head>
 
 <body>
     <div class='contain'>
         <!-- div class='testPlayer3'></div !-->
-        <div class='result'></div>
-        <input class='start' type="button" value="开始" onclick="StartGame()"></input>
+        <div class='result'></div>  
+        <div class='GameOper'>
+            <button class='returnHall' onclick="gotoHall()">返回大厅</button>
+            <button class='tuoguan' onclick="tuoguan()">托管</button>
+        </div>
     </div>
-    <script type="text/javascript" src="js/setImmediate.js"></script>
+    <div class='readyRoom'>
+        <div class='roomContain'>
+        <div style='position: absolute;bottom:50vh;margin:0 0px 2px 0; font-size:calc(calc(0.270vw*12));
+        font-family: "opposans";'>房间列表</div>
+        <div class='roomList'></div>
+        <div class='RoomOper'>
+            <button class='createRoom' onclick="createRoom()">创建房间</button>
+            <button class='joinRoom' onclick="joinRoom()">加入房间</button>
+        </div>
+        </div>
+        <div class='table'>桌子</div>
+        <div class='info'>
+        <div class='connectState'>脱机</div>
+        <div class='serverIp'>服务器地址</div>
+        <div class='selfInfo'></div>
+        </div>
+
+    </div>
+    <button class='start' onclick="StartGame()">开始</button>
+    <!-- script type="text/javascript" src="js/setImmediate.js"></script-->
+    <script type="text/javascript" src="js/rainEffect.js"></script>
+    <script type="text/javascript" src="js/room.js"></script>
     <script type="text/javascript" src="js/other.js"></script>
     <script type="text/javascript" src="js/huSys.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
     <script type="text/javascript" src="js/tile.js"></script>
-
 </body>
 
 </html>

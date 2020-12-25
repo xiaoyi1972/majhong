@@ -17,7 +17,7 @@ class Cards {
         if (!Game.server) {
             div = document.createElement('div')
             div.classList.add("discardArea")
-            document.body.append(div)
+            document.querySelector(".contain").append(div)
         }
         for (let type_i = 0; type_i < 3; type_i++)
             for (let repeat = 0; repeat < 4; repeat++)
@@ -36,6 +36,17 @@ class Cards {
 
     delete(_card) {
         this.discardPile.push(_card)
+    }
+
+    cx(_card) {
+        if (!Game.server) {
+            let child = this.discardArea.children;
+            let len = child.length, endCard = this.discardPile[this.discardPile.length - 1];
+            if (this.discardPile.length != 0 && endCard.type == _card.type && endCard.num == _card.num) {
+                child[len - 1].parentNode.removeChild(child[len - 1])
+                this.discardPile.splice(this.discardPile.length - 1, 1);
+            }
+        }
     }
 
     deleteByFind(_card) {
@@ -84,6 +95,8 @@ class Card {
         card.id = -1;
         card.eventHandle = null;
         card.hu = this.hu;
+        if (typeof this.outAfterGang != 'undefined' && this.outAfterGang)
+            card.outAfterGang = this.outAfterGang;
         return card;
     }
 }
@@ -92,13 +105,11 @@ class Card {
 class Player {
     constructor(_game) {
         this.name;
-        this.baseMultipe = 1;
         this.handCards = [];
         this.cardUI = null;
         this.cards;
         this.hu = new HuSys(this.handCards)
         this.game = _game;
-        this.pengTimer = null;
         this.pengCards = [];
         this.gangCards = [];
         this.huCards = [];
@@ -109,13 +120,26 @@ class Player {
         this.huType = "meihu";
         this.outCardsNum = 0;
         this.firstCardType = -1;
-        this.daque = false;
-        this.direction = -1;//下 0 左 1 上 2 右 3
+        // this.daque = false;
+        this.direction = -1;//下 0 右 1 上 2 左 3
         this.showOthersArea = null;
         this.showOthersAreaCards = [];//展示给其他人的牌面
         this.botResponse = true;
         this.canPGH = 0;
         this.HeadImage = null;//头像
+        this.pengClick = this.pengClick.bind(this);
+        this.gangClick = this.gangClick.bind(this);
+        this.huClick = this.huClick.bind(this);
+        this.cancelClick = this.cancelClick.bind(this);
+        this.DqTiaoClick = this.DqTiaoClick.bind(this);
+        this.DqTongClick = this.DqTongClick.bind(this);
+        this.DqWanClick = this.DqWanClick.bind(this);
+        this.isbot = false;
+        this.score = { df: 1, fan: 0, plus: 0, minus: 0, done: false };//分
+        this.gangScore = [];//杠 计分
+        this.huScore;//被胡 计分
+        this.outAfterGang = false;//是否是杠后出牌 检查杠上炮
+        this.zhuang = false;
     }
 
     set displayArea(m) {
@@ -127,38 +151,56 @@ class Player {
         }
     }
 
+    get daque() {
+        let a = this.handCards.filter((card) => {
+            return card.type == this.firstCardType;
+        })
+        return !(a.length != 0);
+    }
+
     destroy() {
         if (!Game.server) {
+            if (this.cardUI != null) {
+                this.cardUI.responseDiv.style.visibility = 'hidden';
+                this.deleteBindEvent();
+            }
             if (this.hu.msgDiv != null) {
+                // if (this.hu.msgDiv.parentNode != null)
                 this.hu.msgDiv.parentNode.removeChild(this.hu.msgDiv);
             }
             if (this.showOthersArea != null) {
                 let child = this.showOthersArea.children;
                 for (let n_child of child) {
+                    // if (n_child.parentNode != null)
                     n_child.parentNode.removeChild(n_child);
                 }
+                // if (this.showOthersArea.parentNode != null)
                 this.showOthersArea.parentNode.removeChild(this.showOthersArea);
+                this.showOthersArea = null;
             }
 
 
             for (let card of this.handCards) {
+                //if (card.Container.parentNode != null)
                 card.Container.parentNode.removeChild(card.Container);
             }
 
             for (let card of this.pengCardsExist) {
                 for (let i of card) {
+                    //  if (i.Container.parentNode != null)
                     i.Container.parentNode.removeChild(i.Container);
                 }
             }
 
-            if (this.HeadImage.contain != null) {
-                this.HeadImage.contain.parentNode.removeChild(this.HeadImage.contain);
+
+            if (this.HeadImage != null && this.HeadImage.contain != null) {
+                //    this.HeadImage.contain.parentNode.removeChild(this.HeadImage.contain);
             }
         }
 
     }
 
-    isLivePresent = () => {
+    isLivePresent() {
 
         return this.game.players[user.id] == this;
     }
@@ -175,7 +217,7 @@ class Player {
                     this.cardUI.createHuSign(oCard);
                 }
                 if (this.direction == 1 || this.direction == 3) {
-                    oCard.style.top = 0.270 * 24 * i + 'vh';
+                    oCard.style.top = 0.270 * 22 * i + 'vh';
                 }
                 else if (this.direction == 2) {
                     oCard.style.left = 0.270 * 13 * i + 'vw';
@@ -187,7 +229,8 @@ class Player {
                     let card = this.handCards[i];
                     card.Container.parentNode.removeChild(card.Container);
                     card.Container = this.cardUI.createNewCardDiv(this.cardUI.contain, card.type, card.num, i, 1)
-                    card.Container.style.left = (fixedCardsAmount + 1 - 3) * 0.270 * 20 - ((14 - len + i) * 0.270 * 15) + 'vw'
+                    card.Container.style.transform = `translateX(${(fixedCardsAmount + 1 - 3) * 0.270 * 21
+                        - ((14 - len + (len - i)) * 0.270 * 15)}vw)`
                     if (card.hu) {
                         this.cardUI.createHuSign(card.Container);
                     }
@@ -196,30 +239,54 @@ class Player {
         }
     }
 
-
     initShowArea() {
         if (!Game.server) {
-            let div = document.createElement("div"); //创建p元素
-            let headDiv = document.createElement("div"); //创建p元素
-            let headDivArrow = document.createElement("div"); //创建p元素
+            let div = document.createElement("div"); //创建div元素
+            let headDiv = document.createElement("div"); //创建div元素
+            let headDivArrow = document.createElement("div"); //创建div元素
+            let headDivText = document.createElement("div"); //创建div元素
+            let zhuangDivText = document.createElement("div"); //创建div元素
+            let scoreDivText = document.createElement("div"); //创建div元素
+            let huDivText = document.createElement("div"); //创建div元素
             let str = ""
             switch (this.direction) {
                 case 0: str = "South"; break;
-                case 1: str = "West"; break;
+                case 1: str = "East"; break;
                 case 2: str = "North"; break;
-                case 3: str = "East"; break;
+                case 3: str = "West"; break;
             }
             headDiv.classList.add(`headImage`);
             headDiv.classList.add(`headImage_${str}`);
             div.classList.add(`showOtherArea_${str}`);
             document.querySelector('.contain').append(div);
-            document.querySelector('.contain').append(headDiv);
+            //document.querySelector('.contain').append(headDiv);
+            div.append(headDiv);
+            headDivText.innerHTML = this.name;
             headDivArrow.innerHTML = "👇";
+            scoreDivText.innerHTML = '0';
+            zhuangDivText.innerHTML = "庄";
             headDiv.append(headDivArrow);
+            headDiv.append(headDivText);
+            headDiv.append(scoreDivText);
+            headDiv.append(huDivText);
+            headDivText.classList.add('headImageText')
+            headDivText.append(zhuangDivText);
+            if (this.zhuang)
+                zhuangDivText.style.display = 'block';
+            else
+                zhuangDivText.style.display = 'none';
+            if (this.direction == 0) {
+                zhuangDivText.classList.add('southZhuang')
+            }
             this.showOthersArea = div;
-            let num = Math.floor(Math.random() * 7) + 1;
+            //   let num = Math.floor(Math.random() * 7) + 1;
+            let num = this.name.charCodeAt(0) % 7 + 1
             headDiv.style.backgroundImage = `url(./headImage/${num}.jpeg)`;
-            this.HeadImage = { contain: headDiv, arrow: headDivArrow, num: num };
+            this.HeadImage = {
+                contain: headDiv, arrow: headDivArrow, headDivText: headDivText,
+                num: num, zhuangDivText: zhuangDivText, scoreDivText: scoreDivText,
+                huDIvText: huDivText
+            };
 
         }
     }
@@ -239,8 +306,8 @@ class Player {
         this.handCards.push(_card)
     }
 
-    click = (_card) => {
-        if (!this.canDC || this.canPGH) {
+    click(_card) {
+        if (!this.canDC || this.canPGH || this.game.presentEvent.str != "xydcp") {
             console.log("出牌速度 过快")
             return
         }
@@ -279,7 +346,10 @@ class Player {
                 divC.style.left = _cards.discardPile.length * (270 * 0.2)
                 divC.classList.remove('card');
             }
-            _cards.delete(i)
+
+            if (this.outAfterGang)
+                i.outAfterGang = this.outAfterGang;
+            _cards.delete(i);
         }
         this.filterCardsCanOutStyle(0);
         let e = new GameEvent(null, "dachupai", arr, this, true)
@@ -298,7 +368,8 @@ class Player {
         if (!Game.server) {
             this.handCards.forEach((value, index) => {
                 if (value.Container != null) {
-                    value.Container.style.transform = `translateX(${index * 0.270 * 20}vw)`
+                    // value.Container.style.transform = `translateX(${index * 0.270 * 20}vw)`
+                    value.Container.style.transform = `translateX(${index * 100}%)`
                 }
             })
             //重新展示给别人
@@ -315,11 +386,11 @@ class Player {
     getANewShowOtherCardArea(index) {
         if (!Game.server) {
             if (this.direction != 0) {
-                let card = document.createElement("div"); //创建p元素
+                let card = document.createElement("div"); //创建div元素
                 if (this.direction == 1 || this.direction == 3) {
-                    if (this.direction == 1)
+                    if (this.direction == 3)
                         card.classList.add('zc')
-                    else if (this.direction == 3)
+                    else if (this.direction == 1)
                         card.classList.add('zc1')
                     card.style.top = 0.700 * 15 * index - 15 / 2.2 * index + 'vh';
                 }
@@ -336,7 +407,7 @@ class Player {
     getShowOtherCardArea_PH(index, card_type = -1) {
         let card = null;
         if (!Game.server) {
-            card = document.createElement("div"); //创建p元素
+            card = document.createElement("div"); //创建div元素
             let type_str = (card_type == 0 ? 'tiao' : (card_type == 1 ? 'wan' : 'tong')).toString();
             let str = `${type_str}/${type_str}_${index.toString()}`;
             let cardDirectStr = "平躺"
@@ -344,9 +415,9 @@ class Player {
             if (this.direction != 0) {
                 //碰 杠
                 if (this.direction == 1 || this.direction == 3) {
-                    if (this.direction == 1)
+                    if (this.direction == 3)
                         card.classList.add('zcpt_r')
-                    else if (this.direction == 3)
+                    else if (this.direction == 1)
                         card.classList.add('zcpt')
                     // card.style.top = 700 * 0.12 * index - 55 * index + 'px';
                 }
@@ -361,11 +432,15 @@ class Player {
     }
 
 
-    moPai = () => {
+    moPai(gp = false) {
         let _card = this.cards.getCard(this);
+
         if (_card == null) {
             return -1;
         }
+
+        if (gp)
+            _card.getAfterGang = true;
 
         if (!Game.server) {
             _card.eventHandle = () => {
@@ -381,7 +456,17 @@ class Player {
 
         if (this.checkPGH(_card)) {
             let e = new GameEvent({
-                run: () => { this.ResponsePGH(_card, e); },
+                run: this.game.presentEvent.eventId == 2 ?//特殊处理
+                    () => {
+                        //console.log("经过")
+                        this.checkPGH(_card);
+                        //console.log(this.canPGH)
+                        if (this.canPGH)
+                            this.ResponsePGH({ player: this, card: _card });
+                        else
+                            this.cancelClick();
+                    } :
+                    () => { this.ResponsePGH({ player: this, card: _card }); },
                 outTime: () => { this.defaultOutTimeFunc('pgh'); }
             },
                 "needPGH", null, this);
@@ -391,6 +476,7 @@ class Player {
             let e = new GameEvent({
                 run: () => {
                     if (!Game.server) {
+                        this.filterCardsCanOutStyle(1);
                         this.cardUI.tipDiv.innerHTML = '请打出一张牌';
                     }
                 },
@@ -399,11 +485,11 @@ class Player {
                 }
             },
                 "xydcp", null, this);
-            this.game.insertEndOf(this.game.presentEvent, e);
+            this.game.insertFrontOf(this.game.presentEvent, e);
         }
     }
 
-    filterCardsCanOutStyle = (typeSwitch = 1) => {
+    filterCardsCanOutStyle(typeSwitch = 1) {
 
         if (typeSwitch == 0) {
             if (!Game.server) {
@@ -413,53 +499,62 @@ class Player {
             }
         }
         else if (typeSwitch == 1) {
-            let a = this.handCards.filter((card) => {
-                return card.type == this.firstCardType;
-            })
-            if (a.length != 0) {
-                this.daque = false;
+            /* let a = this.handCards.filter((card) => {
+                 return card.type == this.firstCardType;
+             })
+             if (a.length != 0) {
+                 this.daque = false;*/
+            if (!this.daque)
                 if (!Game.server) {
                     this.handCards.forEach((card) => {
                         if (card.type != this.firstCardType)
                             card.Container.classList.add("ban");
                     })
                 }
-            }
-            else {
+            // }
+            /*else {
                 this.daque = true;
-            }
+            }*/
         }
 
     }
 
-    addFull(_cards, count = 13) {
-        for (let i = 0; i < count; i++) {
+    addFull(_cards) {
+        for (let i = 0; i < 13; i++) {
             let Rcards = _cards.getCard(this);
             this.add(Rcards);
         }
         this.updataStateCardResponse();
     }
 
-    huClick = () => {
+    huClick() {
         this.blank();
         this.canPGH = 0;
-        this.huCall(this.readyPGHCard);
+        this.huCall(this.readyPGH_Obj);
+
+
         this.sortCard();
         let nextEvent = this.game.events[1];
         if (nextEvent.str == "xydcp" && nextEvent.obj == this) {
             this.game.events.splice(1, 1)
         }
-        game.CancelGroupEvent(this.game.presentEvent);
+        this.game.CancelGroupEvent(this.game.presentEvent);
         let eventId = this.game.presentEvent.eventId
         this.game.presentEvent.handled = true;
         if (!Game.server) {
+            this.cards.cx(this.readyPGH_Obj.card);
             this.cardUI.responseDiv.style.visibility = 'hidden';
+            this.HeadImage.huDIvText.style.display = 'block';
         }
-        this.readyPGHCard = null;
+        this.readyPGH_Obj = null;
         this.huState = true;
+        this.scoreCalculate(1);
         this.game.HuPlayers.push(this);
         this.game.changeToNextPlayerTurn(this);
-        this.game.ifGameEnd()
+        this.game.showSelfResult(this);
+        this.showInstantScore();
+        this.game.ifGameEnd();
+
         if (!Game.server) {
             if (this.isLivePresent()) {
                 sendOper(eventId, "hu");
@@ -467,16 +562,17 @@ class Player {
         }
     }
 
-    pengClick = () => {
+    pengClick() {
         this.blank();
         this.canPGH = 0;
-        this.pengCall(this.readyPGHCard);
+        this.pengCall(this.readyPGH_Obj);
         let eventId = this.game.presentEvent.eventId
         this.game.presentEvent.handled = true;
         if (!Game.server) {
+            this.cards.cx(this.readyPGH_Obj.card);
             this.cardUI.responseDiv.style.visibility = 'hidden';
         }
-        this.readyPGHCard = null;
+        this.readyPGH_Obj = null;
 
         let e = new GameEvent({
             run: () => {
@@ -496,20 +592,45 @@ class Player {
         }
     }
 
-    gangClick = () => {
+    gangClick() {
         this.blank();
         this.canPGH = 0;
-        this.gangCall(this.readyPGHCard);
+        //        console.log(this.readyPGH_Obj);
+        this.gangCall(this.readyPGH_Obj);
         let eventId = this.game.presentEvent.eventId
         this.game.presentEvent.handled = true;
         if (!Game.server) {
+            this.cards.cx(this.readyPGH_Obj.card);
             this.cardUI.responseDiv.style.visibility = 'hidden';
+            rain.start();
         }
-        this.readyPGHCard = null;
-        if (this.canDC)
-            this.moPai();
-        else
-            this.sortCard();
+
+
+        this.showInstantScore();
+
+        // alert(`${this.score.plus} ${this.score.minus}`)
+        this.readyPGH_Obj = null;
+
+        // if (this.canDC) {
+        this.game.presentEvent.func.run = () => {
+            this.outAfterGang = true;
+            this.moPai(true);
+        };
+        /*
+        let e = new GameEvent({
+            run: () => {
+                this.game.changeToNextPlayerTurn(this);
+                this.needOutAcard_(e);
+            },
+            outTime: () => {
+                this.defaultOutTimeFunc('xydcp');
+            }
+        },
+            "xydcp", null, this);
+        this.game.insertEndOf(this.game.presentEvent, e);*/
+        //  }
+        // else
+        this.sortCard();
         this.game.changeToNextPlayerTurn(this);
         if (!Game.server) {
             if (this.isLivePresent()) {
@@ -518,7 +639,7 @@ class Player {
         }
     }
 
-    cancelClick = () => {
+    cancelClick() {
         this.blank();
         this.canPGH = 0;
         let eventId = this.game.presentEvent.eventId
@@ -526,7 +647,7 @@ class Player {
         if (!Game.server) {
             this.cardUI.responseDiv.style.visibility = 'hidden';
 
-            this.readyPGHCard = null;
+            this.readyPGH_Obj = null;
             if (this.isLivePresent()) {
                 sendOper(eventId, "cancel");
             }
@@ -534,6 +655,7 @@ class Player {
         if (this.canDC) {
             let e = new GameEvent({
                 run: () => {
+                    this.filterCardsCanOutStyle(1);
                     this.cardUI.tipDiv.innerHTML = '请打出一张牌';
                 },
                 outTime: () => {
@@ -550,7 +672,7 @@ class Player {
         if (!Game.server) {
             //--展示给别人看
             ph_card_toShow = this.getShowOtherCardArea_PH(i.num, i.type)
-            let scaleRatio = { rl: 24, n: 13 }, fixedCardsAmount = { rl: -3, n: 12 }
+            let scaleRatio = { rl: 22, n: 13 }, fixedCardsAmount = { rl: -3, n: 12 }
             if (this.direction == 1 || this.direction == 3) {
                 /*   ph_card_toShow.style.top = ((fixedCardsAmount.rl + 1 + 2) * 0.700 * 15
                        + 0.270 * scaleRatio.rl * index
@@ -566,15 +688,15 @@ class Player {
                     + len * 0.270 * scaleRatio.rl * 3)
                     + 'vh';
 
-                if (this.direction == 1) {
+                if (this.direction == 3) {
                     ph_card_toShow.style.marginLeft = "12vh";
                     if (tuchu)
                         ph_card_toShow.style.left = "0.7vh";
                 }
                 else {
-                    ph_card_toShow.style.marginLeft = "-12vh";
+                    ph_card_toShow.style.marginRight = "12vh";
                     if (tuchu)
-                        ph_card_toShow.style.left = "-0.7vh";
+                        ph_card_toShow.style.right = "0.7vh";
                 }
 
                 //700 展示的侧面牌高度 0.12缩放比
@@ -595,7 +717,71 @@ class Player {
     }
 
 
-    huCall = (_card) => {
+    scoreCalculate(instant = 0) {
+        /* if (!instant) {
+             this.score.plus = 0;
+             this.score.minus = 0;
+         }*/
+        if (this.huState) {
+            let objs = this.huScore.obj;
+            let fan = this.score.fan + HuSys.ScoreList[this.huType.toString()].score;
+            let quchuGen = this.huType == "long7dui" || this.huType == "qinglong7dui" ? -1 : 0;
+            this.hu.reset(this.handCards);
+            let DaigenNum = this.hu.Daigen(this.hu.numArr) + quchuGen;
+            for (let numI of this.pengCardsExist) {
+                if (numI.length == 4)
+                    DaigenNum++;
+            }
+            fan += DaigenNum;
+            //特殊处理
+            for (let player of objs) {
+                this.score.plus += this.score.df * fan;
+                player.score.minus -= this.score.df * fan;
+            }
+        }
+        if (this.huCards.length > 0 || this.huState || instant) {
+            for (let gangscore_I of this.gangScore) {
+                for (let player of gangscore_I.obj) {
+                    let extraScore = 1;
+                    // alert("来了")
+                    if (typeof gangscore_I.specialObj != 'undefined') {
+                        if (player == gangscore_I.specialObj) {
+                            extraScore = 2;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    this.score.plus += gangscore_I.score * extraScore;
+                    player.score.minus -= gangscore_I.score * extraScore;
+                }
+            }
+        }
+        if (!instant) {
+            if (!Game.server)
+                this.HeadImage.scoreDivText.innerHTML = this.score.plus + this.score.minus;
+            this.score.done = true;
+        }
+
+    }
+
+    showInstantScore() {
+        if (!Game.server) {
+            this.game.players.forEach(player => {
+                player.score.plus = 0;
+                player.score.minus = 0;
+            })
+            this.game.players.forEach(player => { player.scoreCalculate(1); })
+            this.game.players.forEach(player => {
+                player.HeadImage.scoreDivText.innerHTML = player.score.plus + player.score.minus;
+                player.score.plus = 0;
+                player.score.minus = 0;
+            })
+        }
+    }
+
+    huCall(_obj) {
+        let _card = _obj.card, selfGet = false;
         let index = this.handCards.findIndex((x) => {
             return x == _card
         });
@@ -603,12 +789,41 @@ class Player {
             if (!Game.server) {
                 this.handCards[index].Container.parentNode.removeChild(this.handCards[index].Container)
             }
-            this.handCards.splice(index, 1)
+            this.handCards.splice(index, 1);
+            selfGet = true;
         }
         _card.hu = true;
         this.handCards.push(_card);
         this.hu.reset(this.handCards);
-        this.huType = this.hu.specialCardType(this.hu.numArr)
+        this.huType = this.hu.specialCardType(this.hu.numArr);
+        if(this.huType=="qingyise"){
+            let handCardsType=this.handCards[0].type
+            for(let i of this.pengCardsExist){
+                if(i[0].type!=handCardsType){
+                    this.huType="pinghu";
+                    break;
+                }
+            }
+        }
+        let notHuPlayers = this.game.notHuPlayers(this);
+        let objs = [];
+        if (selfGet)
+            objs.push(...notHuPlayers);
+        else
+            objs.push(_obj.player)
+        this.huScore = { obj: objs, selfGet: selfGet };
+        console.log('被胡', _obj.player.name, _card.outAfterGang, _card.getAfterGang)
+
+        if (typeof _card.getAfterGang != 'undefined' && _card.getAfterGang) {
+            this.score.fan++;
+        }
+
+        if (typeof _card.outAfterGang != 'undefined' && _card.outAfterGang) {
+            let len = _obj.player.gangScore.length;
+            this.score.fan++;
+            _obj.player.gangScore.splice(len - 1, 1);
+        }
+
         if (!Game.server) {
             _card.Container = this.cardUI.createNewCardDiv(this.cardUI.contain, _card.type, _card.num, this.handCards.length)
             this.cardUI.createHuSign(_card.Container);
@@ -616,9 +831,9 @@ class Player {
         }
     }
 
-    gangCall = (_card) => {
-        console.log("NIMADe")
-        let arr = [], tuchu = "-0.7vw";;
+    gangCall(_obj) {
+        let arr = [], tuchu = "0.7vw";
+        let _card = _obj.card, handCardsFourGang = false;
 
         function getPos(index, len) {
             let fixedCardsAmount = 13.5, scaleRatio = 15;
@@ -630,12 +845,19 @@ class Player {
             return leftNum;
         }
 
+        if (typeof _card.specialFourGang != 'undefined' && _card.specialFourGang)
+            handCardsFourGang = true;
+
+        let findedCard = handCardsFourGang ? this.gangCards[0] : _card;
+
         for (let i = 0; i < 4; i++) {
             let index = this.handCards.findIndex((x) => {
-                return x.type == _card.type && x.num == _card.num;
+                return x.type == findedCard.type && x.num == findedCard.num;
             });
             if (index != -1) {
+
                 let reCard = this.handCards.splice(index, 1)[0];
+
                 if (!Game.server) {
                     reCard.Container.parentNode.removeChild(reCard.Container);
                 }
@@ -657,7 +879,7 @@ class Player {
                 let i = _card;
                 i.Container = this.cardUI.createNewCardDiv(this.cardUI.contain, i.type, i.num, this.handCards.length + 0, 1)
                 i.Container.style.left = getPos(1, iTo)
-                i.Container.style.top = tuchu;
+                i.Container.style.bottom = tuchu;
 
                 this.cShow(1, iTo, i);
             }
@@ -674,7 +896,7 @@ class Player {
                 let i = _card;
                 i.Container = this.cardUI.createNewCardDiv(this.cardUI.contain, i.type, i.num, this.handCards.length + 1, 1)
                 i.Container.style.left = getPos(1, len);
-                i.Container.style.top = tuchu;
+                i.Container.style.bottom = tuchu;
 
                 this.cShow(1, len, i);
             }
@@ -695,19 +917,37 @@ class Player {
                     }
                     else if (index == 3) {
                         i.Container.style.left = getPos(1, len);
-                        i.Container.style.top = tuchu;
+                        i.Container.style.bottom = tuchu;
                         this.cShow(1, len, i);
                     }
                 })
             }
             this.pengCardsExist.push(arr);
         }
+
+
+
+        let objs = [], notHuPlayers = this.game.notHuPlayers(this);
+        switch (arr.length) {
+            case 1:
+                objs.push(...notHuPlayers);
+                this.gangScore.push({ obj: objs, score: this.score.df });
+                break;
+            case 3:
+                objs.push(...notHuPlayers);
+                this.gangScore.push({ obj: objs, specialObj: _obj.player, score: this.score.df });
+                break;
+            case 4:
+                objs.push(...notHuPlayers);
+                this.gangScore.push({ obj: objs, score: this.score.df * 2 });
+                break;
+        }
         this.sortCard();
     }
 
-    pengCall = (_card) => {
+    pengCall(_obj) {
         let arr = [];
-
+        let _card = _obj.card;
         function getPos(index, len) {
             let fixedCardsAmount = 13.5, scaleRatio = 15;
             let leftNum = ((fixedCardsAmount + 1 - 3) * 0.270 * 20
@@ -744,16 +984,40 @@ class Player {
         this.sortCard();
     }
 
-    ResponsePGH = (_card) => {
-        console.log("来了老弟");
-        this.readyPGHCard = this.canDC ? _card : _card.clone();
+    ResponsePGH(_obj) {
+        console.log("来了pgh");
+        this.readyPGH_Obj = { player: _obj.player, card: this.canDC ? _obj.card : _obj.card.clone() };
+
+        /*if (this.canPGH & Player.pghType.g) {
+            if (this.firstCardType == _obj.card.type || !this.daque) {
+
+                console.log("有冲突:", this.firstCardType)
+                this.canPGH = 0
+                this.readyPGH_Obj = null
+                this.game.events.splice(0, 1);
+                let e = new GameEvent({
+                    run: () => {
+                        if (!Game.server) {
+                            this.filterCardsCanOutStyle(1);
+                            this.cardUI.tipDiv.innerHTML = '请打出一张牌';
+                        }
+                    },
+                    outTime: () => {
+                        this.defaultOutTimeFunc('xydcp');
+                    }
+                },
+                    "xydcp", null, this);
+                this.game.insertFrontOf(this.game.presentEvent, e);
+                return;
+            }
+        }*/
         if (!Game.server) {
             this.cardUI.tipDiv.innerHTML = '请选择是否碰/杠/胡牌';
             this.cardUI.responseDiv.style.visibility = 'visible';
         }
     }
 
-    SelectDq = () => {
+    SelectDq() {
         if (!Game.server) {
             this.cardUI.tipDiv.innerHTML = '请选择要打缺的牌的类型';
             this.cardUI.SelectDqDiv.style.visibility = 'visible';
@@ -764,15 +1028,15 @@ class Player {
         if (_str == "pgh") {
             if (this.botResponse) {
                 if (this.canPGH & Player.pghType.h) {
-                    console.log("选择了胡")
+                    // console.log("选择了胡")
                     this.huClick();
                 }
                 else if (this.canPGH & Player.pghType.g) {
-                    console.log("选择了杠")
+                    //    console.log("选择了杠")
                     this.gangClick();
                 }
                 else if (this.canPGH & Player.pghType.p) {
-                    console.log("选择了碰")
+                    //     console.log("选择了碰")
                     this.pengClick();
                 }
             }
@@ -796,16 +1060,22 @@ class Player {
             this.click(outCard);
         }
         else if (_str == "dq") {
-            let num = Math.floor(parseInt(this.cards.rand.random() * 3) + 1)
+            // let num = Math.floor((Math.random() * 3) + 1)
+            this.hu.reset(this.handCards);
+            let arr = this.hu.retEveryTypeCount(this.hu.numArr)
+            let minCardCount = Math.min(...arr);
+            let num = arr.indexOf(minCardCount);
+            // console.log(arr)
+            //console.log("哪种类型:"+num)
             switch (num % 3) {
-                case 0: this.DqWanClick(); break;
-                case 1: this.DqTiaoClick(); break;
+                case 0: this.DqTiaoClick(); break;
+                case 1: this.DqWanClick(); break;
                 case 2: this.DqTongClick(); break;
             }
         }
     }
 
-    checkPGH = (_card) => {
+    checkPGH(_card) {
         let count = 0;
         //碰
         let Pengchoice = this.pengCards.filter(item => {
@@ -815,6 +1085,15 @@ class Player {
         let Gangchoice = this.gangCards.filter(item => {
             return (item.type == _card.type && item.num == _card.num);
         });
+        let selfCardsFourGang = false;
+        // console.log(`${this.name}打缺 ？${this.daque}`)
+        this.gangCards.forEach(item => {
+            if (typeof item.instantGang != 'undefined' && item.instantGang && this.daque && this.canDC)
+                selfCardsFourGang = true;
+        })
+        if (Gangchoice.length == 0 && selfCardsFourGang) {//自身有4张相同
+            _card.specialFourGang = true;
+        }
         let GangchoiceFromExistPeng = 0;
         for (let i = 0, len = this.pengCardsExist.length; i < len; i++) {
             let nCard = this.pengCardsExist[i][0];
@@ -827,22 +1106,20 @@ class Player {
             return (item.type == _card.type && item.num == _card.num);
         });
 
-        if (!this.canDC) {
-            if (Pengchoice.length > 0) {
-                if (!Game.server) {
-                    this.cardUI.pengDiv.style.display = 'inline-block';
-                }
-                count++;
-                this.canPGH |= Player.pghType.p;
+        if (Pengchoice.length > 0 && !this.canDC) {
+            if (!Game.server) {
+                this.cardUI.pengDiv.style.display = 'inline-block';
             }
-            else {
-                if (!Game.server) {
-                    this.cardUI.pengDiv.style.display = 'none';
-                }
-                this.canPGH &= ~(Player.pghType.p);
-            }
+            count++;
+            this.canPGH |= Player.pghType.p;
         }
-        if (Gangchoice.length > 0 || (GangchoiceFromExistPeng && this.canDC)) {
+        else {
+            if (!Game.server) {
+                this.cardUI.pengDiv.style.display = 'none';
+            }
+            this.canPGH &= ~(Player.pghType.p);
+        }
+        if ((Gangchoice.length > 0 && this.daque) || selfCardsFourGang || (GangchoiceFromExistPeng && this.canDC)) {
             if (!Game.server) {
                 this.cardUI.gangDiv.style.display = 'inline-block';
             }
@@ -855,7 +1132,7 @@ class Player {
             }
             this.canPGH &= ~(Player.pghType.g);
         }
-        if (Huchoice.length > 0) {
+        if (Huchoice.length > 0 && this.daque) {
             if (!Game.server) {
                 this.cardUI.huDiv.style.display = 'inline-block';
             }
@@ -880,9 +1157,9 @@ class Player {
     }
 
     needOutAcard(_e) {
-
+        this.outAfterGang = false;
         if (this.moPai() == -1) {
-            _e.handled = true;
+            //  _e.handled = true;
             _e.func.outTime = () => { };
             this.game.events.length = 0;
             this.game.push(new GameEvent(() => { }, "noRemainCard", null, null, true));
@@ -890,9 +1167,9 @@ class Player {
         }
         else {
             if (!Game.server) {
-                this.cardUI.tipDiv.innerHTML = '请打出一张牌';
+                //  this.cardUI.tipDiv.innerHTML = '请打出一张牌';
             }
-            _e.handled = true;
+            //  _e.handled = true;
         }
     }
 
@@ -923,8 +1200,12 @@ class Player {
         this.hu.reset(this.handCards);
         let arr = this.hu.retNumCard(this.hu.numArr, 3);
         arr.forEach(item => {
-            if (item.type != this.firstCardType)
-                this.gangCards.push(new Card(item.type, item.num));
+            if (item.type != this.firstCardType) {
+                let card = new Card(item.type, item.num);
+                if (item.amount == 4)
+                    card.instantGang = true;
+                this.gangCards.push(card);
+            }
         })
     }
 
@@ -943,7 +1224,7 @@ class Player {
         }
     }
 
-    bindResponseButton = () => {
+    bindResponseButton() {
         if (!Game.server) {
             this.cardUI.pengDiv.addEventListener('click', this.pengClick);
             this.cardUI.gangDiv.addEventListener('click', this.gangClick);
@@ -952,7 +1233,7 @@ class Player {
         }
     }
 
-    DqWanClick = () => {
+    DqWanClick() {
         this.firstCardType = 1
         this.blank();
         let eventId = this.game.presentEvent.eventId
@@ -965,7 +1246,7 @@ class Player {
         }
     }
 
-    DqTiaoClick = () => {
+    DqTiaoClick() {
         this.firstCardType = 0
         this.blank();
         let eventId = this.game.presentEvent.eventId
@@ -977,7 +1258,7 @@ class Player {
         }
     }
 
-    DqTongClick = () => {
+    DqTongClick() {
         this.firstCardType = 2
         this.blank();
         let eventId = this.game.presentEvent.eventId
@@ -989,17 +1270,31 @@ class Player {
         }
     }
 
-    bindSelectDqButton = () => {
+    bindSelectDqButton() {
         this.cardUI.DqTiaoDiv.addEventListener('click', this.DqTiaoClick);
         this.cardUI.DqWanDiv.addEventListener('click', this.DqWanClick);
         this.cardUI.DqTongDiv.addEventListener('click', this.DqTongClick);
+    }
+
+    deleteBindEvent() {
+        if (!Game.server) {
+            this.cardUI.pengDiv.removeEventListener('click', this.pengClick);
+            this.cardUI.gangDiv.removeEventListener('click', this.gangClick);
+            this.cardUI.huDiv.removeEventListener('click', this.huClick);
+            this.cardUI.cancelDiv.removeEventListener('click', this.cancelClick);
+            this.cardUI.DqTiaoDiv.removeEventListener('click', this.DqTiaoClick);
+            this.cardUI.DqWanDiv.removeEventListener('click', this.DqWanClick);
+            this.cardUI.DqTongDiv.removeEventListener('click', this.DqTongClick);
+        }
     }
 }
 Player.pghType = { p: 1, g: 2, h: 4 };
 
 
+
 class Game {
     constructor(_num = 0) {
+        /*
         this.cards = new Cards();
         this.players = [];
         // this.init(_num);
@@ -1007,12 +1302,14 @@ class Game {
         this.eventHandle;
         this.turn = 0;
         this.timeLimit = -1;
-        this.lastTime;
-        this.nowTime;
+        this.lastTime = null;
         this.HuPlayers = [];
         this.playersNum = _num;
         this.eventId = -1;
-        this.taskQueue = new Map();
+        this.taskQueue = new Map();*/
+        this.playersNum = _num;
+        this.eventLoop = this.eventLoop.bind(this);
+        this.initData();
     }
     set presentEvent(e) {
         this.events[0] = e;
@@ -1022,6 +1319,13 @@ class Game {
         return this.events[0];
     }
 
+    notHuPlayers(_player) {
+        let objs = this.players.filter(item => {
+            return item.huState == false && item != _player;
+        });
+        return objs;
+    }
+
     initData() {
         this.cards = new Cards();
         this.players = [];
@@ -1029,12 +1333,15 @@ class Game {
         this.events = [];
         this.eventHandle;
         this.turn = 0;
-        this.timeLimit = 1;
-        this.lastTime;
-        this.nowTime;
+        this.timeLimit = -1;
+        this.lastTime = null;
         this.HuPlayers = [];
         this.eventId = -1;
         this.taskQueue = new Map();
+        if (this.players.length != 0)
+            this.players[this.turn].zhuang = true;
+        this.gameover = false;
+        this.playing = false;
     }
 
     init(_num) {
@@ -1045,7 +1352,8 @@ class Game {
     add() {
         let player = new Player(this);
         player.cards = this.cards;
-        this.players.push(player)
+        this.players.push(player);
+        return player;
     }
 
     start() {
@@ -1057,11 +1365,13 @@ class Game {
 
     restart() {
         clearTimeout(this.eventHandle)
-        this.cards.destroy();
+        if (this.cards instanceof Cards)
+            this.cards.destroy();
         this.cards = null;
         this.events.length = 0;
         for (let player of this.players) {
-            player.destroy();
+            if (player instanceof Player)
+                player.destroy();
             player = null;
         }
         this.initData();
@@ -1070,17 +1380,19 @@ class Game {
             resultdiv.style.display = "none";
             resultdiv.innerHTML = "";
         }
+        this.playing = true;
     }
 
-    showResult() {
-        let str = "";
-        for (let player of this.players) {
-            player.showHandCards();
-            if (!Game.server) {
-                str += `玩家:${player.name} 
-            胡牌类型:<span style="color:blue">${HuSys.ScoreList[player.huType.toString()].text}</span> 
-            得分:<span style="color:red">${HuSys.ScoreList[player.huType.toString()].score}</span><br>`;
-            }
+    showSelfResult(player) {
+        if (Game.server) return;
+        if (!(this.players.indexOf(player) == user.id)) return;
+        let str = "", huStr = HuSys.ScoreList[player.huType.toString()].text;
+        if (!Game.server) {
+            let score = player.score.plus + player.score.minus;
+            console.log(score)
+            str += `玩家:${player.name} 
+        胡牌类型:<span style="color:blue">${huStr}</span> 
+        得分:<span style="color:red">${score}</span><br>`;//HuSys.ScoreList[player.huType.toString()].score
         }
         if (!Game.server) {
             let resultdiv = document.querySelector(".result");
@@ -1089,15 +1401,80 @@ class Game {
         }
     }
 
+    showResult() {
+        let str = "", youjiaoPlayers = [], wujiaoPlayers = [];
+
+        this.players.forEach(player => {
+            player.score.plus = 0;
+            player.score.minus = 0;
+        })
+
+        for (let player of this.players) {// this.notHuPlayers(null)
+            if (player.huType == "meihu") {
+                let len = player.huCards.length;
+                if (len > 0)
+                    youjiaoPlayers.push(player);
+                else
+                    wujiaoPlayers.push(player);
+            }
+            player.scoreCalculate();
+        }
+
+        for (let player of youjiaoPlayers) {
+            player.hu.reset(player.handCards);
+            let DaigenNum = player.hu.Daigen(player.hu.numArr);
+            for (let numI of player.pengCardsExist) {
+                if (numI.length == 4)
+                    DaigenNum++;
+            }
+            //player.score.fan += DaigenNum;
+            let maxScore = player.score.df * (DaigenNum + player.hu.retMaxJiao(player.hu.numArr));
+            wujiaoPlayers.forEach(item => {
+                item.score.minus -= maxScore;
+                player.score.plus += maxScore;
+            })
+        }
+
+        for (let player of this.players) {
+            player.showHandCards();
+            let huStr;
+            if (player.huType != "meihu")
+                huStr = HuSys.ScoreList[player.huType.toString()].text
+            else {
+                let len = player.huCards.length;
+                huStr = len == 0 ? "没叫" : `${len}叫`;
+            }
+
+            if (!Game.server) {
+                player.HeadImage.arrow.style.display = 'none';
+                let score = player.score.plus + player.score.minus;
+                str += `玩家:${player.name} 
+            胡牌类型:<span style="color:blue">${huStr}</span> 
+            得分:<span style="color:red">${score}</span><br>`;//HuSys.ScoreList[player.huType.toString()].score
+                player.HeadImage.scoreDivText.innerHTML = score;
+            }
+        }
+        if (!Game.server) {
+            let resultdiv = document.querySelector(".result");
+            resultdiv.style.display = "block";
+            resultdiv.innerHTML = str;
+        }
+        console.log(`this.playing ${this.playing}`)
+        this.playing = false;
+    }
+
     ifGameEnd() {
-        let gameover = this.HuPlayers.length == (this.players.length - 1)
-        if (gameover) {
+        this.gameover = (this.HuPlayers.length == (this.players.length - 1) || this.HuPlayers.length == (this.players.length))
+        if (this.gameover) {
             this.events.length = 0;
             this.showResult();
         }
     }
 
     changeToNextPlayerTurn(_player) {
+
+        if (this.HuPlayers.length == this.players.length)
+            return
 
         for (let i = 0, len = this.players.length; i < len; i++)
             this.players[i].canDC = false;
@@ -1122,7 +1499,7 @@ class Game {
             run: () => { player.needOutAcard(e); },
             outTime: () => {
             }
-        }, "mp", null, player);
+        }, "mp", null, player, true);
         this.push(e);
         this.push(new GameEvent(() => { this.letAction(); }, "letAction", null, null, true));
 
@@ -1134,13 +1511,16 @@ class Game {
         })
 
         players.sort((a, b) => {
-            return (a.canPGH & Player.pghType.h) - (b.canPGH & Player.pghType.h);
+            if (a.canPGH != b.canPGH)
+                return (a.canPGH & Player.pghType.h) - (b.canPGH & Player.pghType.h);
+            else
+                return -1;
         })
 
+        //  console.log(players)
         for (let player of players) {
-            player.ResponsePGH(_card);
             let e = new GameEvent({
-                run: () => { },
+                run: () => { player.ResponsePGH({ player: _player, card: _card }); },
                 outTime: () => { player.defaultOutTimeFunc('pgh'); }
             }, "needPGH", null, player);
             e.group = _card.id;
@@ -1153,7 +1533,7 @@ class Game {
         for (let i = 0; i < this.turn; i++) {
             playersOrder.push(playersOrder.shift());
         }
-        game.letAction();
+        this.letAction();
         // this.push(new GameEvent(() => { game.letAction() }, 'letAction', null, null, true));
 
         for (let player of playersOrder) {
@@ -1180,8 +1560,10 @@ class Game {
             let card = player.handCards.find(item => {
                 return item.id == _args;
             });
-            console.log(`玩家${_id}打出了:`);
-            console.log(card)
+            if (Game.server) {
+                console.log(`玩家[${_id}]${player.name} 打出了:`);
+                console.log(card)
+            }
             player.click(card);
         }
         else if (_oper == "SelectOper") {
@@ -1194,26 +1576,44 @@ class Game {
         }
     }
 
-    eventLoop = () => {
+    eventLoop() {
         let overtime = false;
         if (this.events.length != 0) {
             let e = this.events[0];
             let otherHandle = this.taskQueue.get(e.eventId)
+            // console.log(this.events,e.eventId,this.taskQueue)
             if (otherHandle != undefined) {
-                this.gameToOper(otherHandle.player, otherHandle.oper, otherHandle.args)
+                if (e.func == null || (e.func instanceof Object && e.func.run == null))
+                    this.gameToOper(otherHandle.player, otherHandle.oper, otherHandle.args)
             }
 
             if (e.handled) {
                 this.events.splice(0, 1);
+                this.lastTime = null;
             }
             if (this.lastTime == null)
                 this.lastTime = new Date();
             let a = new Date();
             let deltaTime = (a.getTime() - this.lastTime.getTime()) / 1000;
-            // if (typeof ws !== 'undefined' && (ws.readyState == 0 || ws.readyState == 3)) {
-            //    if (e.obj != game.players[0] /*|| 1*/) overtime = true;
-            //}
-            if (deltaTime >= this.timeLimit && this.timeLimit != -1) overtime = true;
+            if (typeof ws !== 'undefined' && (ws.readyState == 0 || ws.readyState == 3)) {
+                if (e.obj != null && e.obj != game.players[0]) {
+                    //console.log(deltaTime)
+                    if (deltaTime >= 1 /*|| 1*/) {
+                        //alert(deltaTime)
+                        overtime = true;
+                    }
+                }
+                if (e.obj != game.players[0]
+                  //  || 1
+                )
+                    if (deltaTime >= 0.3) overtime = true;
+            }
+            if (!Game.server)
+                if (e.obj != null && this.players.indexOf(e.obj) == user.id && e.obj.isbot && deltaTime >= 1) {
+                    // console.log(`来了托管 事件id:${e.eventId} 事件名:${e.str}`)
+                    overtime = true;
+                }
+            //  if (deltaTime >= this.timeLimit && this.timeLimit != -1) overtime = true;
 
             if (e instanceof GameEvent) {
                 if (e.str == "dachupai") {
@@ -1274,6 +1674,21 @@ class Game {
 
         }
         this.eventHandle = setTimeout(this.eventLoop, 10);
+    }
+
+    stop() {
+        clearTimeout(this.eventHandle)
+        if (this.cards instanceof Cards)
+            this.cards.destroy();
+        this.cards = null;
+        this.events.length = 0;
+        for (let player of this.players) {
+            if (player instanceof Player)
+                player.destroy();
+            player = null;
+        }
+        this.players.length = 0;
+        this.playing = false;
     }
 
     push(e) {
@@ -1341,7 +1756,7 @@ class CardUI {
         this.DqWanDiv;
     }
     createNewCardDiv(contain, type, index, n = 0, dir = 0) {
-        let card = document.createElement("div"); //创建p元素
+        let card = document.createElement("div"); //创建div元素
         let type_str = (type == 0 ? 'tiao' : (type == 1 ? 'wan' : 'tong')).toString();
         let str = `${type_str}/${type_str}_${index.toString()}`;
         // card.style.left = (n * 0.270 * 20) + 'vw'
@@ -1430,7 +1845,7 @@ class CardUI {
         return pDiv;
     }
     createHuSign(_container) {
-        let huSign = document.createElement("div"); //创建p元素
+        let huSign = document.createElement("div"); //创建div元素
         huSign.classList.add("huSign")
         huSign.innerHTML = "胡"
         _container.appendChild(huSign)
@@ -1439,14 +1854,30 @@ class CardUI {
 
 
 let cardm = {//条 //万 //筒
-    15: [[3, 3, 3, 3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//测试双胡
-    16: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [2, 2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
-    17: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [2, 2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
-    18: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 2, 0, 0, 0, 0]],
-    19: [[3, 3, 3, 3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//测试碰 胡
-    20: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [2, 2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
-    21: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 2, 2, 2, 2, 2, 2, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
-    22: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 2, 0, 0, 0, 0]],
+    1: [[3, 3, 3, 3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//测试双胡
+    2: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [2, 2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    3: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [2, 2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    4: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 2, 0, 0, 0, 0]],
+
+    5: [[3, 3, 3, 3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//测试碰 胡
+    6: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 2, 2, 0, 3, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    7: [[0, 0, 0, 0, 0, 0, 0, 0, 3], [1, 2, 2, 1, 2, 1, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    8: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 2, 0, 0, 0, 0]],
+
+    9: [[3, 3, 3, 3, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//抢本家杠、碰 隔家胡
+    10: [[0, 0, 0, 1, 0, 0, 0, 0, 0], [1, 2, 2, 2, 2, 0, 1, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0, 0]],
+    11: [[0, 0, 0, 0, 1, 1, 1, 1, 1], [1, 2, 2, 1, 2, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    12: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 2, 0, 0, 0, 0]],
+
+    13: [[0, 3, 3, 2, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 3, 0, 0, 0, 0]],//抢本家杠、碰 隔家胡
+    14: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 2, 2, 0, 1, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0, 0]],
+    15: [[0, 0, 0, 0, 1, 1, 1, 1, 1], [1, 2, 2, 1, 2, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    16: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 0, 0, 0, 0, 2]],
+    //111 123 234 456 77
+    17: [[3, 2, 2, 2, 1, 1, 0, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],//杠上花
+    18: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 2, 2, 0, 1, 0, 0], [2, 0, 0, 0, 0, 0, 0, 0, 0]],
+    19: [[0, 0, 0, 0, 1, 1, 1, 1, 1], [1, 2, 2, 1, 2, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    20: [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 1], [2, 2, 3, 3, 0, 0, 0, 0, 2]],
 }
 
 function testCard(_player, cards) {
@@ -1469,17 +1900,75 @@ function idToAdapt(_id) {
     }
 }
 
-let divUIs = [];
+let divUIs = [], waitSets = [];
 
 if (typeof module !== 'undefined' && module.exports) {
     Game.server = true;
     module.exports = { Game, GameEvent };
 }
 
+function loadImage() {
+    for (let type = 0; type < 3; type++)
+        for (let index = 1; index < 10; index++) {
+            let type_str = (type == 0 ? 'tiao' : (type == 1 ? 'wan' : 'tong')).toString();
+            let str = `${type_str}/${type_str}_${index.toString()}`;
+            let path = `./tile/${str}.svg`
+            let preloadLink = document.createElement("link");
+            preloadLink.href = path;
+            preloadLink.rel = "preload";
+            preloadLink.as = "image";
+            document.head.appendChild(preloadLink);
+        }
+    let preloadLink = document.createElement("link");
+    preloadLink.href = `./font/STFANGSO.ttf`;
+    preloadLink.rel = "preload";
+    preloadLink.as = "font";
+    document.head.appendChild(preloadLink);
+    let preloadLink1 = document.createElement("link");
+    preloadLink1.href = `./font/OPPOSans-R.ttf`;
+    preloadLink1.rel = "preload";
+    preloadLink1.as = "font";
+    document.head.appendChild(preloadLink1);
+}
+
+
+function createRoomSets() {
+    let table = document.querySelector(".table");
+    for (let i = 0; i < 4; i++) {
+        let divUI = document.createElement("div"); //创建div
+        let divtitleUI = document.createElement("div"); //创建div
+        divtitleUI.innerHTML = "好了"
+        divUI.classList.add('waitHead');
+        divUI.append(divtitleUI);
+        table.append(divUI);
+        waitSets.push({ headImage: divUI, text: divtitleUI });
+    }
+}
+
+function initSelfInfo(_name) {
+    let selfInfo = document.querySelector(".selfInfo");
+    let serverIp= document.querySelector('.serverIp');
+    let head = document.createElement("div"); //创建div
+    let headText = document.createElement("div"); //创建div
+    let num = _name.charCodeAt(0) % 7 + 1
+    head.style.backgroundImage = `url(./headImage/${num}.jpeg)`;
+    headText.innerHTML=_name;
+    serverIp.innerHTML=`服务器地址 <span style='color:red'>${contactIp}</span>`
+    selfInfo.append(head);
+    selfInfo.append(headText);
+}
 
 if (!Game.server) {
+    loadImage();
+    createRoomSets();
     var game = new Game(4);
-    for (let i = 0, len = 4; i < 4; i++) {
+    var rain = new Rain();
+    var room = new Room(document.querySelector('.roomList'));
+
+    for (let i = 0; i < 9; i++) {
+        room.create();
+    }
+    for (let i = 0; i < 4; i++) {
         let divUI = document.createElement("div"); //创建div
         // if (i != 0)
         divUI.style.display = "none"
@@ -1489,11 +1978,27 @@ if (!Game.server) {
         let cardUI = new CardUI(divUI)
         divUIs.push(cardUI)
     }
+    user.name = prompt("请输入你的名字", "noob");
+    initSelfInfo(user.name);
+    ws = new WebSocket(user.serverIp);//'ws://localhost:3000/'
+    //ws = new WebSocket('ws://localhost:3000/');//
+    ws_handleFunc.toBind(ws);
+
+
+    game.add();
+    idToAdapt(user.id);
+    game.players[0].name = user.name;
+    game.players[0].initShowArea();
 }
 
 
-function start() {
+function start(_users = null) {
+    if (!Game.server) {
+        rain.stop();
+    }
     idToAdapt(user.id);
+    //game.cards.rand.setSeed(400)// 100 486 703 451 424
+    console.log(`rand:${game.cards.rand.seed}`)
     game.players.forEach((player, index) => {
         player.cardUI = divUIs[index];
 
@@ -1504,26 +2009,36 @@ function start() {
             player.displayArea = true;
         }
         if (!Game.server) {
-            player.initShowArea();
-            player.bindResponseButton();
-            player.bindSelectDqButton();
+            let defaultNames = [user.name, "乙", "丙", "丁"];
+            let name;
+            if (_users != null)
+                name = _users[index].name;
+            else
+                name = defaultNames[index];
+            player.name = name;
+            /*switch (index) {
+                case 0: player.name = user.name; break;
+                case 1: player.name = "乙"; break;
+                case 2: player.name = "丙"; break;
+                case 3: player.name = "丁"; break;
+            }*/
         }
-        /*
-        {
-            let testn = 19;
-            switch (index) {
-                case 0: testCard(player, cardm[testn]); break;
-                case 1: testCard(player, cardm[testn + 1]); break;
-                case 2: testCard(player, cardm[testn + 2]); break;
-                case 3: testCard(player, cardm[testn + 3]); break;
+        player.initShowArea();
+        player.bindResponseButton();
+        player.bindSelectDqButton();
 
+        {
+            let testn = 17;
+            switch (index) {
+                /*   case 0: testCard(player, cardm[testn]); break;
+                   case 1: testCard(player, cardm[testn + 1]); break;
+                   case 2: testCard(player, cardm[testn + 2]); break;
+                   case 3: testCard(player, cardm[testn + 3]); break;*/
+                default: player.addFull(game.cards); break;
             }
-        }*/
-        /*(if (game.turn == index) {
-            player.addFull(game.cards, 14);
         }
-        else*/
-        player.addFull(game.cards);
+
+        //player.addFull(game.cards);
         player.sortCard();
 
     })
@@ -1533,10 +2048,11 @@ function start() {
 }
 
 if (!Game.server) {
-    /* game.restart();
-     game.cards.rand.setSeed(89)//714
-     console.log(game.cards.rand.seed)
-     start();*/
+
+    //game.restart();
+    //game.cards.rand.setSeed(486)//714
+    //console.log(game.cards.rand.seed)
+    //start();
 }
 
 

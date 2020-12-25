@@ -19,15 +19,40 @@ class HuSys {
         return div;
     }
 
+    retEveryTypeCount(_numArr) {
+        let arr = new Array(3).fill(0);
+        for (let i = 0; i < _numArr.length; i++) {
+            if (i % 10 == 9) continue;
+            switch (parseInt(i / 10)) {
+                case 0: arr[0] += _numArr[i]; break;
+                case 1: arr[1] += _numArr[i]; break;
+                case 2: arr[2] += _numArr[i]; break;
+            }
+        }
+        return arr;
+    }
+
     retNumCard(_numArr, _Num) {
         let arr = [];
         for (let i = 0; i < _numArr.length; i++) {
             if (i % 10 == 9) continue;
             if (_numArr[i] >= _Num) {
-                arr.push({ 'type': parseInt(i / 10), 'num': i % 10 + 1 }); //0-8 10-18 20-28
+                arr.push({ 'type': parseInt(i / 10), 'num': i % 10 + 1, amount: _numArr[i] });
+                //0-8 10-18 20-28
             }
         }
         return arr;
+    }
+
+    retMaxJiao(_numArr) {
+        let arr = this.retCanHuCard(_numArr), ScoreTypeArr = [];
+        for (let i of arr) {
+            let index = i.type * 10 + i.num - 1;
+            _numArr[index]++;
+            ScoreTypeArr.push(HuSys.ScoreList[this.specialCardType(_numArr).toString()].score);
+            _numArr[index]--;
+        }
+        return Math.max(...ScoreTypeArr);
     }
 
     retCanHuCard(_numArr) {
@@ -47,34 +72,13 @@ class HuSys {
         let result = true;
 
         if (this._7Dui(_numArr)) {
-            /*if (this._7DuiQing(_numArr))
-                str = "qing7dui"
-            else
-                str = "qidui"*/
         }
-        else if (this.pinghu().result) {
-            /*if (this.pengpenghu(_numArr)) {
-                if (this.qingyise(_numArr))
-                    str = "qingdui";
-                else if (this.jiangdui(_numArr))
-                    str = "jiangdui"
-                else
-                    str = "duiduihu"
-            }
-            else if (this.qingyise(_numArr)) {
-                str = "qingyise"
-            }
-            else if (this.yaojiu(_numArr)) {
-                str = "yaojiupinghu"
-            }
-            else
-                str = "pinghu"*/
+        else if (this.pinghu(_numArr).result) {
         }
         else {
-            // str = "meihu"
+
             result = false;
         }
-        // this.msgDiv.innerHTML = ScoreList[str.toString()].text;
         return result;
     }
 
@@ -82,18 +86,20 @@ class HuSys {
         let str;
         let result = true;
         let isQ = this.qingyise(_numArr)
+        //console.log(`isQ:${isQ}`)
         let isDaigen = this.Daigen(_numArr);
         if (this._7Dui(_numArr)) {
-            if (isQ)
+            if (isQ && isDaigen == 0)
                 str = "qing7dui"//str = "胡牌了 是清7对";
-            else if (isDaigen > 0)
+            else if (isDaigen > 0 && isQ)
                 str = "qinglong7dui" //str = "胡牌了 是清龙7对";
             else if (isDaigen > 0 && !isQ)
                 str = "long7dui"//str = "胡牌了 是龙7对";
             else
                 str = "qidui"// str = "胡牌了 是7对";
         }
-        else if (this.pinghu().result) {
+        else if (this.pinghu(_numArr).result) {
+            console.log(`牌数:${this.count(_numArr)}`)
             if (this.count(_numArr)) {
                 if (this.pengpenghu(_numArr)) {
                     if (isQ)
@@ -112,12 +118,16 @@ class HuSys {
                     else
                         str = "yaojiupinghu"//  str = "胡牌了 是幺九平胡";
                 }
+                else
+                    str = "pinghu"
             }
             else {
-                if (isDaigen > 0)
-                    str = `daigen${isDaigen}` //str = "胡牌了 是带根平胡";
-                else
-                    str = "pinghu" //str = "胡牌了 是平胡";
+                console.log(`没来`)
+                if (isQ) {
+                    str = "qingyise"// str = "胡牌了 是清一色";
+                }
+                else 
+                str = "pinghu" //str = "胡牌了 是平胡";
             }
         }
         else {
@@ -134,7 +144,7 @@ class HuSys {
         for (let i = 0; i < _numArr.length; i++) {
             if (i % 10 == 9) continue;
             else {
-                if (_numArr[i] > 0) num++;
+                if (_numArr[i] > 0) num += _numArr[i];
             }
         }
         return num == 14;
@@ -192,7 +202,7 @@ class HuSys {
 
     yaojiu(_numArr) {
         let num = new Array(4).fill(0);
-        let s = this.pinghu();
+        let s = this.pinghu(_numArr);
         if (s.result) {
             if (s.Jiang != null) {
                 if (s.Jiang % 10 == 0 || s.Jiang % 10 == 8) //0-8 10-18 20-28
@@ -213,14 +223,14 @@ class HuSys {
 
     jiangdui(_numArr) {
         let num = new Array(4).fill(0);
-        let s = this.pinghu();
+        let s = this.pinghu(_numArr);
         if (s.result) {
             if (s.Jiang != null) {
                 if (s.Jiang % 10 == 1 || s.Jiang % 10 == 4 || s.Jiang % 10 == 7) //1-4 11-14 21-14
                     for (let i = 0; i < s.combo.length; i++) {
                         for (let j = 0; j < s.combo[0].length; j++) {
                             if (s.combo[i][j] % 10 == 1 || s.combo[i][j] % 10 == 4 || s.combo[i][j] % 10 == 7) {
-                                num[j] = 1;
+                                num[i] = 1;
                             }
                             else return false
                         }
@@ -236,7 +246,7 @@ class HuSys {
         this.numArr = new Array(30).fill(0)
         for (let i of this.cards) {
             //if (i instanceof Card)
-                this.numArr[i.type * 10 + i.num - 1] = this.numArr[i.type * 10 + i.num - 1] + 1
+            this.numArr[i.type * 10 + i.num - 1]++;
         }
     }
 
@@ -249,14 +259,14 @@ class HuSys {
         return arr;
     }//找将
 
-    pinghu() {
+    pinghu(_numArr) {
         let Jiang = this.findJiang();
         let s = { 'result': false, 'Jiang': null, 'combo': null };
         if (Jiang.length != 0) {
             for (let i = 0; i < Jiang.length; i++) {
-                let _numArr = this.numArr.slice(0);
-                _numArr[Jiang[i]] -= 2;
-                let sr = this.chaiPai(_numArr);
+                let _tonumArr = _numArr.slice(0);
+                _tonumArr[Jiang[i]] -= 2;
+                let sr = this.chaiPai(_tonumArr);
                 ////console.log(sr)
                 if (sr.result) {
                     s.Jiang = Jiang[i];
@@ -279,7 +289,8 @@ class HuSys {
             if (i != 0 && i % 10 == 9) continue;
             switch (_numArr[i]) {
                 case 0: break;
-                case 1: let Shun = this.findShun(_numArr, i);
+                case 1:
+                    let Shun = this.findShun(_numArr, i);
                     if (Shun.length == 0)
                         return s
                     else {
@@ -309,6 +320,11 @@ class HuSys {
                     let Shun1 = this.findShun(_numArr, i)
                     if (Shun1.length == 0)
                         return s
+                    else {
+                        ////console.log('找到的顺牌:' + Shun);
+                        combo.push(Shun1.slice(0))
+                        this.spilit(_numArr, Shun1, 1)
+                    }
                     break;
             }
         }
@@ -389,19 +405,19 @@ let pubSub = {
 }
 
 HuSys.ScoreList = {
-    qidui: { score: 4, text: "7对" },
-    daigen1: { score: 2, text: "带1根" },
-    daigen2: { score: 4, text: "带2根" },
-    daigen3: { score: 8, text: "带3根" },
-    long7dui: { score: 16, text: "龙7对" },
-    qing7dui: { score: 16, text: "清7对" },
-    qinglong7dui: { score: 32, text: "清龙7对" },
-    qingdui: { score: 8, text: "清对" },
-    jiangdui: { score: 8, text: "将对" },
-    duiduihu: { score: 2, text: "对对胡" },
-    qingyise: { score: 4, text: "清一色" },
-    yaojiupinghu: { score: 4, text: "幺九平胡" },
-    qingyaojiupinghu: { score: 16, text: "清幺九平胡" },
+    qidui: { score: 4, text: "7对" },//3
+    daigen1: { score: 2, text: "带1根" },//2
+    daigen2: { score: 4, text: "带2根" },//3
+    daigen3: { score: 8, text: "带3根" },//4
+    long7dui: { score: 16, text: "龙7对" },//5
+    qing7dui: { score: 16, text: "清7对" },//5
+    qinglong7dui: { score: 32, text: "清龙7对" },//6
+    qingdui: { score: 8, text: "清对" },//4
+    jiangdui: { score: 8, text: "将对" },//4
+    duiduihu: { score: 2, text: "对对胡" },//2
+    qingyise: { score: 4, text: "清一色" },//3
+    yaojiupinghu: { score: 4, text: "幺九平胡" },//3
+    qingyaojiupinghu: { score: 16, text: "清幺九平胡" },//5
     pinghu: { score: 1, text: "平胡" },
     meihu: { score: 0, text: "没胡" },
 }
